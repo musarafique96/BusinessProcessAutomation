@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BPA Platform: UI Prototype</title>
+<style>
+  :root {
+    --bg: #f3f6fb; --surface: #ffffff; --surface-2: #f7f9fc; --border: #e4e9f2;
+    --text: #0f172a; --text-2: #475569; --text-3: #64748b;
+    --primary: #2563eb; --primary-ink: #ffffff; --primary-soft: #e8efff;
+    --success: #16a34a; --success-soft: #dcfce7;
+    --warning: #d97706; --warning-soft: #fef3c7;
+    --danger: #dc2626; --danger-soft: #fee2e2;
+    --violet: #7c3aed; --violet-soft: #ede9fe;
+    --sidebar: #0f1b33; --sidebar-ink: #cbd5e1; --sidebar-active: #1e3a8a;
+    --shadow: 0 1px 2px rgba(15,23,42,.04), 0 4px 16px rgba(15,23,42,.06);
+    --radius: 14px;
+  }
+  [data-theme="dark"] {
+    --bg: #0b1220; --surface: #121c2e; --surface-2: #17243a; --border: #22314d;
+    --text: #e6edf7; --text-2: #aab6c9; --text-3: #8593a8;
+    --primary: #60a5fa; --primary-ink: #0b1220; --primary-soft: #1e3a6b;
+    --success: #4ade80; --success-soft: #14532d;
+    --warning: #fbbf24; --warning-soft: #5b3e0a;
+    --danger: #f87171; --danger-soft: #5c1d1d;
+    --violet: #a78bfa; --violet-soft: #3b2a6b;
+    --sidebar: #0a1222; --sidebar-ink: #94a3b8; --sidebar-active: #1d3a72;
+    --shadow: none;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans Arabic", "Noto Naskh Arabic", sans-serif; background: var(--bg); color: var(--text); font-size: 14px; }
+  button, input, select { font: inherit; color: inherit; }
+  .app { display: grid; grid-template-columns: 240px 1fr; min-height: 100vh; }
+  aside { background: var(--sidebar); color: var(--sidebar-ink); padding: 20px 14px; display: flex; flex-direction: column; gap: 6px; }
+  .brand { display: flex; align-items: center; gap: 10px; padding: 4px 10px 18px; color: #fff; }
+  .brand-mark { width: 34px; height: 34px; border-radius: 10px; background: linear-gradient(135deg, #3b82f6, #6366f1); display: grid; place-items: center; font-weight: 800; }
+  .brand small { display: block; color: #7d8ba4; font-size: 11px; font-weight: 500; }
+  .nav a { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 10px; color: var(--sidebar-ink); text-decoration: none; cursor: pointer; }
+  .nav a:hover { background: rgba(255,255,255,.05); }
+  .nav a.active { background: var(--sidebar-active); color: #fff; }
+  .badge { margin-inline-start: auto; background: #ef4444; color: #fff; border-radius: 999px; font-size: 11px; padding: 1px 7px; font-weight: 700; }
+  .usage { margin-top: auto; background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.08); border-radius: 12px; padding: 14px; }
+  .usage h4 { margin: 0 0 8px; color: #fff; font-size: 12px; }
+  .meter { height: 6px; background: rgba(255,255,255,.1); border-radius: 999px; overflow: hidden; margin: 6px 0 2px; }
+  .meter > span { display: block; height: 100%; background: linear-gradient(90deg, #3b82f6, #8b5cf6); }
+  .usage p { margin: 0; font-size: 11px; color: #7d8ba4; }
+  main { min-width: 0; }
+  header.top { display: flex; align-items: center; gap: 14px; padding: 16px 28px; background: var(--surface); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 2; }
+  .search { flex: 1; max-width: 520px; display: flex; align-items: center; gap: 8px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 10px; padding: 9px 12px; color: var(--text-3); }
+  .search input { border: 0; background: transparent; outline: none; flex: 1; }
+  kbd { font-size: 11px; border: 1px solid var(--border); border-radius: 6px; padding: 1px 6px; color: var(--text-3); }
+  .icon-btn, .pill-btn { background: var(--surface-2); border: 1px solid var(--border); border-radius: 10px; padding: 8px 12px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
+  .spacer { flex: 1; }
+  .avatar { width: 34px; height: 34px; border-radius: 50%; background: var(--primary-soft); color: var(--primary); display: grid; place-items: center; font-weight: 700; }
+  .content { padding: 26px 28px 40px; display: grid; gap: 18px; }
+  .view { display: none; gap: 18px; }
+  .view.active { display: grid; }
+  .hero { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+  .hero h1 { margin: 0; font-size: 24px; letter-spacing: -.01em; }
+  .hero p { margin: 4px 0 0; color: var(--text-2); }
+  .chip { background: var(--surface); border: 1px solid var(--border); padding: 8px 12px; border-radius: 10px; color: var(--text-2); }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); padding: 18px; }
+  .card h3 { margin: 0; font-size: 15px; }
+  .card-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 12px; }
+  .link { color: var(--primary); text-decoration: none; cursor: pointer; font-weight: 600; font-size: 13px; }
+  .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+  .kpi { display: flex; gap: 14px; align-items: center; }
+  .kpi .ico { width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center; flex: none; font-size: 18px; }
+  .kpi .num { font-size: 26px; font-weight: 800; letter-spacing: -.02em; }
+  .kpi .lbl { color: var(--text-2); font-size: 12px; }
+  .delta { font-size: 12px; font-weight: 700; }
+  .up { color: var(--success); } .down { color: var(--danger); }
+  .grid-2 { display: grid; grid-template-columns: 1.6fr 1fr; gap: 18px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 18px; }
+  .seg { display: inline-flex; background: var(--surface-2); border: 1px solid var(--border); border-radius: 10px; padding: 3px; }
+  .seg button { border: 0; background: transparent; padding: 6px 12px; border-radius: 8px; cursor: pointer; color: var(--text-2); }
+  .seg button.on { background: var(--primary); color: var(--primary-ink); }
+  .legend { display: flex; gap: 14px; color: var(--text-2); font-size: 12px; align-items: center; }
+  .dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; margin-inline-end: 6px; }
+  .list { display: grid; gap: 12px; }
+  .act { display: flex; gap: 12px; align-items: flex-start; }
+  .act .ico { width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; flex: none; }
+  .act .t { font-weight: 600; }
+  .act .s { color: var(--text-3); font-size: 12px; }
+  .act .time { margin-inline-start: auto; color: var(--text-3); font-size: 12px; white-space: nowrap; }
+  .qa { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .qa button { text-align: start; border: 1px solid var(--border); background: var(--surface-2); border-radius: 12px; padding: 14px; cursor: pointer; }
+  .qa button b { display: block; margin-top: 8px; }
+  .qa .ico { width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; }
+  .task { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+  .task:last-child { border-bottom: 0; }
+  .prio { font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 999px; }
+  .status { font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: 999px; display: inline-flex; gap: 6px; align-items: center; white-space: nowrap; }
+  .s-pending { background: var(--warning-soft); color: var(--warning); }
+  .s-approved { background: var(--success-soft); color: var(--success); }
+  .s-rejected { background: var(--danger-soft); color: var(--danger); }
+  .s-returned { background: var(--violet-soft); color: var(--violet); }
+  .s-completed { background: var(--primary-soft); color: var(--primary); }
+  .tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--border); margin-bottom: 14px; flex-wrap: wrap; }
+  .tabs button { border: 0; background: transparent; padding: 10px 12px; cursor: pointer; color: var(--text-2); border-bottom: 2px solid transparent; }
+  .tabs button.on { color: var(--primary); border-bottom-color: var(--primary); font-weight: 700; }
+  .tabs button .n { background: var(--surface-2); border-radius: 999px; padding: 1px 8px; margin-inline-start: 6px; font-size: 12px; }
+  .tabs button.on .n { background: var(--primary-soft); color: var(--primary); }
+  table { width: 100%; border-collapse: collapse; }
+  th, td { padding: 12px 10px; text-align: start; border-bottom: 1px solid var(--border); }
+  th { color: var(--text-3); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: .03em; }
+  tr:hover td { background: var(--surface-2); }
+  .who { display: flex; align-items: center; gap: 8px; }
+  .mini { width: 26px; height: 26px; border-radius: 50%; background: var(--violet-soft); color: var(--violet); display: grid; place-items: center; font-size: 11px; font-weight: 700; }
+  .pager { display: flex; justify-content: space-between; align-items: center; margin-top: 12px; color: var(--text-3); }
+  .pager .pg { display: flex; gap: 6px; }
+  .pager .pg span { border: 1px solid var(--border); border-radius: 8px; padding: 4px 10px; background: var(--surface); }
+  .pager .pg span.on { background: var(--primary); color: var(--primary-ink); border-color: transparent; }
+  .detail-head { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+  .detail-head h2 { margin: 0; font-size: 20px; }
+  .detail-grid { display: grid; grid-template-columns: 1.6fr 1fr; gap: 18px; }
+  .kv { display: grid; grid-template-columns: 160px 1fr; gap: 10px 14px; }
+  .kv div:nth-child(odd) { color: var(--text-3); }
+  .flow { display: grid; gap: 0; }
+  .step { display: grid; grid-template-columns: 26px 1fr; gap: 12px; padding-bottom: 18px; position: relative; }
+  .step:not(:last-child)::before { content: ""; position: absolute; top: 26px; bottom: 0; left: 12px; width: 2px; background: var(--border); }
+  [dir="rtl"] .step:not(:last-child)::before { left: auto; right: 12px; }
+  .step .node { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; font-size: 12px; font-weight: 700; background: var(--surface-2); border: 2px solid var(--border); color: var(--text-3); }
+  .step.done .node { background: var(--success-soft); border-color: var(--success); color: var(--success); }
+  .step.now .node { background: var(--warning-soft); border-color: var(--warning); color: var(--warning); }
+  .btn { border: 0; border-radius: 10px; padding: 9px 14px; cursor: pointer; background: var(--primary); color: var(--primary-ink); font-weight: 600; }
+  .btn.ghost { background: var(--surface-2); color: var(--text); border: 1px solid var(--border); }
+  .foot-note { color: var(--text-3); font-size: 12px; }
+  .toast { position: fixed; bottom: 20px; inset-inline-start: 50%; transform: translateX(-50%); background: var(--text); color: var(--bg); padding: 10px 14px; border-radius: 10px; display: none; }
+  @media (max-width: 1100px) { .kpis { grid-template-columns: 1fr 1fr; } .grid-2, .grid-3, .detail-grid { grid-template-columns: 1fr; } }
+  @media (max-width: 800px) { .app { grid-template-columns: 1fr; } aside { display: none; } }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside>
+    <div class="brand"><div class="brand-mark">B</div><div>BPA<small>Business Process Automation</small></div></div>
+    <nav class="nav" id="nav">
+      <a data-view="dashboard" class="active">Dashboard</a>
+      <a data-view="requests">Requests <span class="badge">3</span></a>
+      <a data-view="tasks">Tasks <span class="badge">5</span></a>
+      <a data-view="workflows">Workflows</a>
+      <a data-view="forms">Forms</a>
+      <a data-view="reports">Reports</a>
+      <a data-view="documents">Documents</a>
+      <a data-view="employees">Employees</a>
+      <a data-view="settings">Settings</a>
+    </nav>
+    <div class="usage">
+      <h4>Plan usage</h4>
+      <div style="color:#cbd5e1;font-size:12px">Active users: 38 / 50</div>
+      <div class="meter"><span style="width:76%"></span></div>
+      <p>Active workflows: 7 / 10</p>
+      <div class="meter"><span style="width:70%"></span></div>
+    </div>
+  </aside>
+
+  <main>
+    <header class="top">
+      <div class="search"><span>&#128269;</span><input placeholder="Search requests, employees, documents..." aria-label="Search"><kbd>Ctrl K</kbd></div>
+      <div class="spacer"></div>
+      <button class="icon-btn" id="themeBtn" title="Toggle theme">&#9790; Dark</button>
+      <button class="icon-btn" id="dirBtn" title="Toggle direction">&#8644; RTL</button>
+      <button class="icon-btn" title="Notifications">&#128276; <span class="badge">5</span></button>
+      <div class="avatar">A</div>
+    </header>
+
+    <div class="content">
+
+      <!-- DASHBOARD -->
+      <section class="view active" id="view-dashboard">
+        <div class="hero">
+          <div>
+            <h1>Good morning, Ahmed</h1>
+            <p>Here is what needs your attention today.</p>
+          </div>
+          <div class="chip">Mon, Nov 10, 2025</div>
+        </div>
+
+        <div class="kpis">
+          <div class="card kpi"><div class="ico" style="background:var(--primary-soft);color:var(--primary)">&#128196;</div><div><div class="lbl">Total requests</div><div class="num">248</div><div class="delta up">&uarr; 12%</div></div></div>
+          <div class="card kpi"><div class="ico" style="background:var(--success-soft);color:var(--success)">&#10003;</div><div><div class="lbl">Approved</div><div class="num">176</div><div class="delta up">&uarr; 15%</div></div></div>
+          <div class="card kpi"><div class="ico" style="background:var(--warning-soft);color:var(--warning)">&#9201;</div><div><div class="lbl">Pending approval</div><div class="num">42</div><div class="delta down">&darr; 8%</div></div></div>
+          <div class="card kpi"><div class="ico" style="background:var(--danger-soft);color:var(--danger)">&#10005;</div><div><div class="lbl">Rejected</div><div class="num">30</div><div class="delta down">&darr; 5%</div></div></div>
+        </div>
+
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-head">
+              <h3>Request overview</h3>
+              <div class="seg" id="rangeSeg"><button data-r="7">7D</button><button class="on" data-r="30">30D</button><button data-r="90">90D</button><button data-r="365">1Y</button></div>
+            </div>
+            <div class="legend" style="margin-bottom:8px"><span><span class="dot" style="background:var(--primary)"></span>Total</span><span><span class="dot" style="background:var(--success)"></span>Approved</span><span><span class="dot" style="background:var(--danger)"></span>Rejected</span></div>
+            <svg id="trend" viewBox="0 0 640 240" width="100%" role="img" aria-label="Request trend chart"></svg>
+          </div>
+
+          <div class="card">
+            <div class="card-head"><h3>Requests by department</h3><span class="foot-note">This month</span></div>
+            <div style="display:flex;gap:18px;align-items:center;flex-wrap:wrap">
+              <svg id="donut" width="170" height="170" viewBox="0 0 170 170" role="img" aria-label="Requests by department"></svg>
+              <div class="list" style="flex:1;min-width:150px" id="deptLegend"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid-3">
+          <div class="card">
+            <div class="card-head"><h3>Quick actions</h3></div>
+            <div class="qa">
+              <button><div class="ico" style="background:var(--primary-soft);color:var(--primary)">&#128722;</div><b>New purchase request</b></button>
+              <button><div class="ico" style="background:var(--success-soft);color:var(--success)">&#128197;</div><b>Request leave</b></button>
+              <button><div class="ico" style="background:var(--warning-soft);color:var(--warning)">&#9638;</div><b>Request materials</b></button>
+              <button><div class="ico" style="background:var(--violet-soft);color:var(--violet)">&#10004;</div><b>View my tasks</b></button>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-head"><h3>My tasks</h3><a class="link" data-go="tasks">View all</a></div>
+            <div>
+              <div class="task"><span class="prio" style="background:var(--danger-soft);color:var(--danger)">High</span><div style="flex:1"><div style="font-weight:600">Approve purchase PR-2025-0342</div><div class="foot-note">Due today, 10:00</div></div></div>
+              <div class="task"><span class="prio" style="background:var(--warning-soft);color:var(--warning)">Medium</span><div style="flex:1"><div style="font-weight:600">Review leave LR-2025-0211</div><div class="foot-note">Due today, 14:00</div></div></div>
+              <div class="task"><span class="prio" style="background:var(--primary-soft);color:var(--primary)">Normal</span><div style="flex:1"><div style="font-weight:600">Check material MR-2025-0210</div><div class="foot-note">Due tomorrow, 09:00</div></div></div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-head"><h3>Recent activity</h3><a class="link">View all</a></div>
+            <div class="list">
+              <div class="act"><div class="ico" style="background:var(--primary-soft);color:var(--primary)">&#128196;</div><div><div class="t">PR-2025-0342 submitted</div><div class="s">by Ali Raza</div></div><div class="time">2 min</div></div>
+              <div class="act"><div class="ico" style="background:var(--success-soft);color:var(--success)">&#10003;</div><div><div class="t">LR-2025-0211 approved</div><div class="s">by Sarah Ahmed</div></div><div class="time">5 min</div></div>
+              <div class="act"><div class="ico" style="background:var(--warning-soft);color:var(--warning)">&#8630;</div><div><div class="t">MR-2025-0208 returned</div><div class="s">for changes by Ahmed Ali</div></div><div class="time">12 min</div></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- REQUESTS -->
+      <section class="view" id="view-requests">
+        <div class="hero">
+          <div><h1>Requests</h1><p>Manage and track all business requests.</p></div>
+          <div style="display:flex;gap:10px"><button class="pill-btn">Export</button><button class="btn" data-go="newRequest">+ New request</button></div>
+        </div>
+        <div class="card">
+          <div class="tabs" id="reqTabs">
+            <button class="on">All <span class="n">248</span></button>
+            <button>Pending <span class="n">42</span></button>
+            <button>Approved <span class="n">176</span></button>
+            <button>Rejected <span class="n">30</span></button>
+            <button>Returned <span class="n">12</span></button>
+          </div>
+          <div style="display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap">
+            <div class="search" style="max-width:340px"><span>&#128269;</span><input placeholder="Search requests" aria-label="Search requests"></div>
+            <button class="pill-btn">All departments</button>
+            <button class="pill-btn">All workflows</button>
+            <button class="pill-btn">Last 30 days</button>
+          </div>
+          <table>
+            <thead><tr><th>#</th><th>Title</th><th>Requester</th><th>Department</th><th>Date</th><th>Status</th><th></th></tr></thead>
+            <tbody id="reqRows"></tbody>
+          </table>
+          <div class="pager"><span>Showing 1 to 5 of 248</span><div class="pg"><span>&lsaquo;</span><span class="on">1</span><span>2</span><span>3</span><span>&hellip;</span><span>50</span><span>&rsaquo;</span></div></div>
+        </div>
+      </section>
+
+      <!-- REQUEST DETAIL -->
+      <section class="view" id="view-detail">
+        <div class="detail-head">
+          <button class="pill-btn" data-go="requests">&larr; Back</button>
+          <div class="spacer"></div>
+          <button class="pill-btn">Print</button>
+          <button class="pill-btn">Download</button>
+          <button class="btn" id="takeAction">Take action</button>
+        </div>
+        <div class="detail-grid">
+          <div class="card">
+            <div class="detail-head" style="margin-bottom:12px">
+              <div>
+                <div class="foot-note">PR-2025-0342</div>
+                <h2>Purchase of laptops</h2>
+              </div>
+              <span class="status s-pending">&#9679; Pending approval</span>
+            </div>
+            <div class="tabs" id="detailTabs">
+              <button class="on">Details</button>
+              <button>Approval history</button>
+              <button>Attachments <span class="n">2</span></button>
+              <button>Comments</button>
+            </div>
+            <div class="kv">
+              <div>Requester</div><div>Ali Raza, Operations</div>
+              <div>Department</div><div>IT</div>
+              <div>Request date</div><div>Nov 10, 2025</div>
+              <div>Required by</div><div>Nov 20, 2025</div>
+              <div>Purpose</div><div>New laptops for the development team</div>
+              <div>Items</div><div>5 x Laptop, 5 x Mouse</div>
+              <div>Estimated amount</div><div><strong>PKR 75,000</strong></div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-head"><h3>Approval flow</h3></div>
+            <div class="flow">
+              <div class="step done"><div class="node">&#10003;</div><div><div style="font-weight:600">Submitted</div><div class="foot-note">Ali Raza, Nov 10, 09:12</div></div></div>
+              <div class="step now"><div class="node">2</div><div><div style="font-weight:600">Department manager</div><div class="foot-note">Pending, due in 2 days</div></div></div>
+              <div class="step"><div class="node">3</div><div><div style="font-weight:600">Finance approval</div><div class="foot-note">Required above PKR 50,000</div></div></div>
+              <div class="step"><div class="node">4</div><div><div style="font-weight:600">Purchase team</div><div class="foot-note">Record supplier and PO</div></div></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SIMPLE PLACEHOLDERS for other sections -->
+      <section class="view" id="view-tasks"><div class="card"><h3>Tasks</h3><p class="foot-note">Task list, built in Phase 4.</p></div></section>
+      <section class="view" id="view-workflows"><div class="card"><h3>Workflows</h3><p class="foot-note">Workflow designer, built in Phase 3.</p></div></section>
+      <section class="view" id="view-forms"><div class="card"><h3>Forms</h3><p class="foot-note">Form builder, built in Phase 2.</p></div></section>
+      <section class="view" id="view-reports"><div class="card"><h3>Reports</h3><p class="foot-note">Reports and charts, built in Phase 6.</p></div></section>
+      <section class="view" id="view-documents"><div class="card"><h3>Documents</h3><p class="foot-note">Documents, built in Phase 5.</p></div></section>
+      <section class="view" id="view-employees"><div class="card"><h3>Employees</h3><p class="foot-note">Employee directory, built in Phase 1.</p></div></section>
+      <section class="view" id="view-settings"><div class="card"><h3>Settings</h3><p class="foot-note">Company settings, built in Phase 1.</p></div></section>
+      <section class="view" id="view-newRequest"><div class="card"><h3>New request</h3><p class="foot-note">Dynamic form, built in Phase 2 and Phase 4.</p></div></section>
+    </div>
+  </main>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+  const $ = (s, r = document) => r.querySelector(s);
+  const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+  const css = (v) => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+
+  // ---- navigation ----
+  function show(view) {
+    $$('.view').forEach(v => v.classList.toggle('active', v.id === 'view-' + view));
+    $$('#nav a').forEach(a => a.classList.toggle('active', a.dataset.view === view));
+    window.scrollTo(0, 0);
+  }
+  $$('#nav a').forEach(a => a.addEventListener('click', () => show(a.dataset.view)));
+  $$('[data-go]').forEach(el => el.addEventListener('click', () => show(el.dataset.go)));
+
+  // ---- theme and direction ----
+  $('#themeBtn').addEventListener('click', () => {
+    const dark = document.documentElement.dataset.theme !== 'dark';
+    document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+    $('#themeBtn').textContent = dark ? '☀ Light' : '☾ Dark';
+    drawCharts();
+  });
+  $('#dirBtn').addEventListener('click', () => {
+    const rtl = document.documentElement.dir !== 'rtl';
+    document.documentElement.dir = rtl ? 'rtl' : 'ltr';
+    document.documentElement.lang = rtl ? 'ar' : 'en';
+    $('#dirBtn').textContent = rtl ? '⇆ LTR' : '⇆ RTL';
+    drawCharts();
+  });
+
+  // ---- charts ----
+  const series = {
+    7:   { total: [18, 22, 15, 26, 30, 24, 28], approved: [12, 16, 10, 18, 22, 17, 20], rejected: [2, 3, 1, 4, 3, 2, 3] },
+    30:  { total: [28, 40, 52, 66, 78, 92, 104, 118, 128], approved: [18, 26, 34, 44, 52, 62, 70, 82, 90], rejected: [3, 4, 5, 6, 6, 7, 8, 9, 10] },
+    90:  { total: [60, 84, 110, 96, 128, 150, 162, 140, 176, 188, 170, 205], approved: [40, 56, 74, 66, 92, 108, 118, 102, 130, 138, 124, 150], rejected: [6, 8, 9, 7, 10, 12, 14, 11, 13, 15, 12, 16] },
+    365: { total: [90, 110, 140, 130, 160, 185, 210, 205, 240, 230, 260, 280], approved: [60, 74, 96, 92, 110, 128, 150, 146, 172, 166, 190, 208], rejected: [8, 10, 12, 11, 14, 16, 17, 15, 19, 18, 21, 23] }
+  };
+  let range = 30;
+
+  function linePath(values, w, h, pad, max) {
+    const step = (w - pad * 2) / (values.length - 1);
+    return values.map((v, i) => {
+      const x = pad + i * step;
+      const y = h - pad - (v / max) * (h - pad * 2);
+      return [x, y];
+    });
+  }
+  function smooth(points) {
+    if (points.length < 2) return '';
+    let d = `M${points[0][0]},${points[0][1]}`;
+    for (let i = 0; i < points.length - 1; i++) {
+      const [x0, y0] = points[i], [x1, y1] = points[i + 1];
+      const cx = (x0 + x1) / 2;
+      d += ` C${cx},${y0} ${cx},${y1} ${x1},${y1}`;
+    }
+    return d;
+  }
+
+  function drawTrend() {
+    const svg = $('#trend'), W = 640, H = 240, P = 28;
+    const s = series[range];
+    const max = Math.max(...s.total) * 1.12;
+    const ptsT = linePath(s.total, W, H, P, max);
+    const ptsA = linePath(s.approved, W, H, P, max);
+    const ptsR = linePath(s.rejected, W, H, P, max);
+    const primary = css('--primary'), success = css('--success'), danger = css('--danger'), border = css('--border'), muted = css('--text-3');
+    const grid = [0, 0.25, 0.5, 0.75, 1].map(f => {
+      const y = H - P - f * (H - P * 2);
+      return `<line x1="${P}" x2="${W - P}" y1="${y}" y2="${y}" stroke="${border}" stroke-dasharray="3 4"/><text x="${P - 6}" y="${y + 4}" text-anchor="end" font-size="11" fill="${muted}">${Math.round(f * max)}</text>`;
+    }).join('');
+    const area = smooth(ptsT) + ` L${ptsT[ptsT.length - 1][0]},${H - P} L${P},${H - P} Z`;
+    const last = ptsT[ptsT.length - 1];
+    svg.innerHTML = `
+      <defs><linearGradient id="g" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stop-color="${primary}" stop-opacity=".25"/><stop offset="100%" stop-color="${primary}" stop-opacity="0"/></linearGradient></defs>
+      ${grid}
+      <path d="${area}" fill="url(#g)"/>
+      <path d="${smooth(ptsT)}" fill="none" stroke="${primary}" stroke-width="3" stroke-linecap="round"/>
+      <path d="${smooth(ptsA)}" fill="none" stroke="${success}" stroke-width="2" stroke-linecap="round" opacity=".9"/>
+      <path d="${smooth(ptsR)}" fill="none" stroke="${danger}" stroke-width="2" stroke-linecap="round" opacity=".9"/>
+      ${ptsT.map(([x, y]) => `<circle cx="${x}" cy="${y}" r="3.5" fill="${css('--surface')}" stroke="${primary}" stroke-width="2"/>`).join('')}
+      <g transform="translate(${Math.min(last[0] - 60, W - 150)},${Math.max(last[1] - 44, 6)})">
+        <rect width="120" height="30" rx="8" fill="${css('--text')}"/>
+        <text x="60" y="19" text-anchor="middle" font-size="12" font-weight="700" fill="${css('--bg')}">${s.total[s.total.length - 1]} requests</text>
+      </g>`;
+  }
+
+  const depts = [
+    { name: 'Operations', pct: 32, color: '#2563eb' },
+    { name: 'Finance', pct: 28, color: '#16a34a' },
+    { name: 'HR', pct: 22, color: '#f59e0b' },
+    { name: 'Others', pct: 18, color: '#8b5cf6' }
+  ];
+  function drawDonut() {
+    const svg = $('#donut'), r = 62, c = 85, circ = 2 * Math.PI * r;
+    let offset = 0;
+    const arcs = depts.map(d => {
+      const len = (d.pct / 100) * circ;
+      const el = `<circle cx="${c}" cy="${c}" r="${r}" fill="none" stroke="${d.color}" stroke-width="22" stroke-dasharray="${len} ${circ - len}" stroke-dashoffset="${-offset}" transform="rotate(-90 ${c} ${c})"/>`;
+      offset += len;
+      return el;
+    }).join('');
+    svg.innerHTML = `${arcs}
+      <text x="${c}" y="${c - 2}" text-anchor="middle" font-size="24" font-weight="800" fill="${css('--text')}">248</text>
+      <text x="${c}" y="${c + 16}" text-anchor="middle" font-size="12" fill="${css('--text-3')}">Total</text>`;
+    $('#deptLegend').innerHTML = depts.map(d =>
+      `<div style="display:flex;align-items:center;justify-content:space-between;gap:10px"><span><span class="dot" style="background:${d.color}"></span>${d.name}</span><strong>${d.pct}%</strong></div>`
+    ).join('');
+  }
+  function drawCharts() { drawTrend(); drawDonut(); }
+
+  $$('#rangeSeg button').forEach(b => b.addEventListener('click', () => {
+    $$('#rangeSeg button').forEach(x => x.classList.toggle('on', x === b));
+    range = Number(b.dataset.r);
+    drawTrend();
+  }));
+
+  // ---- requests table ----
+  const requests = [
+    ['PR-2025-0342', 'Purchase of laptops', 'Ali Raza', 'IT', 'Nov 10, 2025', 'pending'],
+    ['MR-2025-0211', 'Cement bags request', 'Sara Khan', 'Projects', 'Nov 09, 2025', 'approved'],
+    ['LR-2025-0108', 'Annual leave', 'Usman Tariq', 'HR', 'Nov 08, 2025', 'approved'],
+    ['PR-2025-0341', 'Office supplies', 'Fatima Noor', 'Administration', 'Nov 07, 2025', 'rejected'],
+    ['MR-2025-0209', 'Steel material', 'Hassan Raza', 'Projects', 'Nov 06, 2025', 'returned']
+  ];
+  const statusLabel = { pending: 'Pending', approved: 'Approved', rejected: 'Rejected', returned: 'Returned' };
+  $('#reqRows').innerHTML = requests.map(r => `
+    <tr>
+      <td><strong>${r[0]}</strong></td>
+      <td>${r[1]}</td>
+      <td><div class="who"><span class="mini">${r[2].split(' ').map(p => p[0]).join('')}</span>${r[2]}</div></td>
+      <td>${r[3]}</td>
+      <td>${r[4]}</td>
+      <td><span class="status s-${r[5]}">&#9679; ${statusLabel[r[5]]}</span></td>
+      <td><a class="link" data-go="detail">View</a></td>
+    </tr>`).join('');
+  $$('#reqRows [data-go]').forEach(el => el.addEventListener('click', () => show('detail')));
+
+  // ---- detail tabs and actions ----
+  $$('#detailTabs button').forEach(b => b.addEventListener('click', () => {
+    $$('#detailTabs button').forEach(x => x.classList.toggle('on', x === b));
+  }));
+  $('#takeAction').addEventListener('click', () => {
+    const t = $('#toast');
+    t.textContent = 'Prototype: approve, reject and return actions open here.';
+    t.style.display = 'block';
+    setTimeout(() => t.style.display = 'none', 2200);
+  });
+
+  drawCharts();
+</script>
+</body>
+</html>
