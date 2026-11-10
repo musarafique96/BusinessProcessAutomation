@@ -1,0 +1,50 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: bpa_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      PGPASSWORD: postgres
+      BPA_TEST_ADMIN_CONN: Host=localhost;Port=5432;Database=bpa_test;Username=postgres;Password=postgres
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Apply migrations
+        run: psql -h localhost -U postgres -d bpa_test -v ON_ERROR_STOP=1 -f db/migrations/0001_tenancy.sql
+
+      - name: Row-level security checks (SQL)
+        run: psql -h localhost -U postgres -d bpa_test -v ON_ERROR_STOP=1 -f tests/sql/rls_checks.sql
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Restore
+        run: dotnet restore Bpa.slnx
+
+      - name: Build
+        run: dotnet build Bpa.slnx --no-restore --configuration Release
+
+      - name: Test
+        run: dotnet test Bpa.slnx --no-build --configuration Release --verbosity normal
