@@ -109,8 +109,8 @@
   .row-mid { display: grid; grid-template-columns: 1.85fr 1.2fr 1.05fr; gap: 16px; }
   .card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; box-shadow: var(--shadow); padding: 16px 18px; min-width: 0; }
   .card-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
-  .card-head h3 { margin: 0; font-size: 14.5px; display: flex; align-items: center; gap: 9px; font-weight: 700; }
-  .card-head h3 .ti { width: 26px; height: 26px; border-radius: 8px; display: grid; place-items: center; }
+  .card-head h3 { margin: 0; font-size: 16px; display: flex; align-items: center; gap: 10px; font-weight: 700; }
+  .card-head h3 .ti { width: 24px; height: 24px; border-radius: 0; display: grid; place-items: center; background: transparent !important; }
   .link { color: var(--primary); cursor: pointer; font-weight: 600; font-size: 12px; display: inline-flex; gap: 6px; align-items: center; text-decoration: none; }
   .seg { display: inline-flex; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 3px; gap: 2px; }
   .seg button { border: 0; background: transparent; padding: 6px 11px; border-radius: 8px; cursor: pointer; color: var(--text-2); font-size: 12px; font-weight: 500; white-space: nowrap; }
@@ -128,9 +128,9 @@
 
   .act { display: flex; gap: 11px; align-items: center; padding: 9px 0; border-bottom: 1px solid var(--border); }
   .act:last-child { border-bottom: 0; }
-  .act .ico { width: 36px; height: 36px; border-radius: 11px; display: grid; place-items: center; flex: none; }
-  .act .t { font-weight: 600; font-size: 12.5px; }
-  .act .s { color: var(--text-3); font-size: 11px; margin-top: 2px; }
+  .act .ico { width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; flex: none; }
+  .act .t { font-weight: 600; font-size: 13.5px; }
+  .act .s { color: var(--text-3); font-size: 12px; margin-top: 3px; }
   .act .time { margin-inline-start: auto; color: var(--text-3); font-size: 11px; white-space: nowrap; }
 
   .row-bot { display: grid; grid-template-columns: 1.55fr 1.5fr 1.4fr; gap: 16px; }
@@ -144,17 +144,18 @@
   .tabs button.on { color: var(--primary); border-bottom-color: var(--primary); font-weight: 700; }
   .task { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px dashed var(--border); font-size: 12px; }
   .task:last-child { border-bottom: 0; }
-  .chk { width: 16px; height: 16px; border-radius: 5px; border: 1.5px solid var(--border); display: grid; place-items: center; flex: none; }
-  .chk.on { background: var(--primary); border-color: var(--primary); color: #fff; }
+  .chk { width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--orange-d); display: grid; place-items: center; flex: none; color: var(--orange-d); }
+  .chk.ok { border-color: var(--primary); color: var(--primary); }
+  .chk.blue { border-color: var(--primary); color: var(--primary); }
   .task .tt { flex: 1; font-weight: 500; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .prio { font-size: 10.5px; font-weight: 700; padding: 3px 9px; border-radius: 999px; white-space: nowrap; }
   .p-high { background: #ffe4ea; color: #e11d48; } .p-med { background: #ffedd5; color: #ea580c; } .p-norm { background: var(--primary-soft); color: var(--primary); }
   .task .when { color: var(--text-3); font-size: 10.5px; white-space: nowrap; width: 62px; text-align: end; }
   .build { border-radius: 16px; padding: 18px 20px; color: #fff; background: radial-gradient(120% 120% at 0% 0%, #3b3fb8, #0b1a3d 75%); position: relative; overflow: hidden; cursor: pointer; display: flex; flex-direction: column; }
-  .build h3 { margin: 0; font-size: 18px; line-height: 1.2; font-weight: 800; }
+  .build h3 { margin: 0; font-size: 22px; line-height: 1.15; font-weight: 800; position: relative; }
   .build p { margin: 6px 0 0; color: #d4dcff; font-size: 12px; }
   .build .go { margin-top: auto; align-self: flex-start; background: #fff; color: #0b1a3d; border: 0; border-radius: 10px; padding: 9px 16px; font-weight: 700; font-size: 12px; cursor: pointer; display: inline-flex; gap: 8px; align-items: center; }
-  .build svg.art { position: absolute; inset-inline-end: 0; top: 40px; width: 170px; height: 150px; }
+  .build svg.art { position: absolute; inset-inline-end: -6px; top: 34px; width: 230px; height: 190px; }
 
   .btn { border: 0; border-radius: 11px; padding: 10px 16px; cursor: pointer; background: var(--primary); color: #fff; font-weight: 700; display: inline-flex; gap: 8px; align-items: center; font-size: 13px; }
   .btn.ghost { background: var(--surface); color: var(--text); border: 1px solid var(--border); }
@@ -331,9 +332,9 @@
             <div class="card-head"><h3><span class="ti" style="background:var(--primary-soft);color:var(--primary)"><svg class="i" viewBox="0 0 24 24" style="width:14px;height:14px"><rect x="3" y="3" width="18" height="18" rx="4"/><path d="M8 12l3 3 5-6"/></svg></span>My Tasks</h3><a class="link" data-go="tasks">View All <svg class="i" viewBox="0 0 24 24" style="width:13px;height:13px"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a></div>
             <div class="tabs" id="taskTabs"><button class="on">All (5)</button><button>Approvals (3)</button><button>Actions (2)</button></div>
             <div>
-              <div class="task"><div class="chk on"><svg class="i" viewBox="0 0 24 24" style="width:11px;height:11px;stroke-width:3"><path d="M5 12l4.5 4.5L19 7"/></svg></div><div class="tt">Approve Purchase Request #PR-2025-0342</div><span class="prio p-high">High</span><span class="when">2 min ago</span></div>
-              <div class="task"><div class="chk"></div><div class="tt">Review Leave Request #LR-2025-0211</div><span class="prio p-med">Medium</span><span class="when">5 min ago</span></div>
-              <div class="task"><div class="chk"></div><div class="tt">Process Material Request #MR-2025-0208</div><span class="prio p-norm">Normal</span><span class="when">10 min ago</span></div>
+              <div class="task"><div class="chk"><svg class="i" viewBox="0 0 24 24" style="width:12px;height:12px"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div><div class="tt">Approve Purchase Request #PR-2025-0342</div><span class="prio p-high">High</span><span class="when">2 min ago</span></div>
+              <div class="task"><div class="chk"><svg class="i" viewBox="0 0 24 24" style="width:12px;height:12px"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div><div class="tt">Review Leave Request #LR-2025-0211</div><span class="prio p-med">Medium</span><span class="when">5 min ago</span></div>
+              <div class="task"><div class="chk blue"><svg class="i" viewBox="0 0 24 24" style="width:12px;height:12px;stroke-width:2.4"><path d="M5 12l4.5 4.5L19 7"/></svg></div><div class="tt">Process Material Request #MR-2025-0208</div><span class="prio p-norm">Normal</span><span class="when">10 min ago</span></div>
             </div>
           </div>
 
@@ -517,7 +518,7 @@
     let off = 0;
     const arcs = depts.map(d => {
       const len = (d.pct / 100) * circ;
-      const el = `<circle cx="${c}" cy="${c}" r="${r}" fill="none" stroke="${d.color}" stroke-width="22" stroke-dasharray="${len - 1.5} ${circ - len + 1.5}" stroke-dashoffset="${-off}" transform="rotate(-90 ${c} ${c})"/>`;
+      const el = `<circle cx="${c}" cy="${c}" r="${r}" fill="none" stroke="${d.color}" stroke-width="30" stroke-dasharray="${len - 1.5} ${circ - len + 1.5}" stroke-dashoffset="${-off}" transform="rotate(-90 ${c} ${c})"/>`;
       off += len; return el;
     }).join('');
     $('#donut').innerHTML = `${arcs}
