@@ -84,6 +84,40 @@ E-signatures are built as a product feature in this phase. The product does not 
 
 Exit gate: each module passes its own tests, and the core execution, permission, and audit model is unchanged.
 
+## Phase 10: Attendance, shifts and leave allocations
+
+Scope added at the owner's request. These modules are not in the 22-module blueprint, so the coverage table below lists them separately. Role-based access applies throughout.
+
+- **Attendance recording, three methods, all built:**
+  - Manual entry by an authorized person, with a reason and an audit record for each change.
+  - Location check-in: the employee checks in or out from the phone browser or app. The app reads the device location once, at the moment of check-in or check-out, and compares it with the site's allowed radius. Only the result, the time, and the accuracy reading are stored. Location is never tracked between check-ins. Employees consent before the first use, and a manual fallback is always available when location is unavailable or denied.
+  - Biometric device: a device adapter interface is built now, with a simulator for tests. Vendor integration is added when the hardware is bought.
+- Shifts, working-hour rules, and business calendars (holidays per company).
+- **Leave allocations:** entitlements per leave type, accrual and carry-forward rules, and a ledger for every change. Fixed annual allowance is the default. Dynamic rules are configurable per company (A4, A5).
+- **Overtime:** rules configurable per company (rates, thresholds, approval chain). A specialist reviews each rule set before it is used for money calculations (see money rules below).
+
+Exit gate: each attendance method records correctly and respects its consent rules; leave balances reconcile with the ledger; overtime rules reproduce the reviewed reference calculations.
+
+## Phase 11: Employee services and sensitive HR records
+
+Modules: helpdesk tickets, business trip requests and settlements, training records and obligations, performance evaluations, and the employee self-service portal.
+
+- Sensitive data (evaluations, training obligations, attendance, loans) has its own field-level rules. Only the roles named in the policy can read or edit each field, and every read of sensitive data is audited.
+- Evaluations and their scores are visible only to the reviewer chain and HR, not to peers or line managers outside that chain.
+- Trip settlements and expense claims use the same per-company money rules as other requests.
+
+Exit gate: field-level access tests pass for every sensitive field; a user outside the policy cannot read or export a sensitive value through any screen, API, or report.
+
+## Phase 12: Payroll and compensation
+
+Modules: loans and advances (schedules, deductions, early settlement), payroll-linked items (overtime, allowances, deductions, reimbursements), payroll runs with payslips, and payroll documents.
+
+- Money rules are per-company settings: rates, rounding, deduction order, and tax tables. The product ships no default tax rule. A specialist validates each rule set before it is used for payroll, and the validated version is recorded with its reviewer and date.
+- Payroll calculations are reproducible: the same inputs and rule version always give the same result.
+- Payslips are permission-checked documents, consistent with Phase 5.
+
+Exit gate: payroll runs reconcile with the attendance, leave, overtime, and loan ledgers; the reference payroll calculations match the validated rule set; payslips are visible only to the employee and authorized HR roles.
+
 ## UI and design standard (applies to every phase)
 
 - **Light and dark themes from Phase 1.** Colors come from design tokens, not hard-coded values, so both themes are built from the same components.
@@ -120,3 +154,5 @@ Exit gate: each module passes its own tests, and the core execution, permission,
 | 4.20 Mobile and field operations | 8 |
 | 4.21 Templates and marketplace | 4, 6, 9 |
 | 4.22 AI and intelligent automation | 9 |
+
+HR/ERP extension (outside the 22-module blueprint, added at the owner's request): attendance, shifts and business calendars, leave allocations, and overtime (Phase 10); helpdesk, business trips, training, evaluations, and the employee portal (Phase 11); loans, payroll-linked items, and payroll runs (Phase 12).
