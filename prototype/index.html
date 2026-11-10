@@ -121,19 +121,19 @@
   .tip { position: absolute; transform: translate(-100%, -120%); background: #0e1a33; color: #fff; padding: 6px 11px; border-radius: 9px; font-size: 11.5px; font-weight: 700; pointer-events: none; white-space: nowrap; }
   .tip::after { content: ""; position: absolute; left: 50%; bottom: -4px; width: 8px; height: 8px; background: inherit; transform: translateX(-50%) rotate(45deg); }
 
-  .donut-wrap { display: grid; grid-template-columns: 170px 1fr; gap: 12px; align-items: center; height: 230px; }
+  .donut-wrap { display: grid; grid-template-columns: 170px 1fr; gap: 12px; align-items: center; height: 196px; }
   .dleg { display: grid; gap: 16px; }
   .dleg div { display: flex; align-items: center; justify-content: space-between; color: var(--text-2); font-size: 12.5px; }
   .dleg strong { color: var(--text); font-size: 12.5px; }
 
-  .act { display: flex; gap: 11px; align-items: center; padding: 9px 0; border-bottom: 1px solid var(--border); }
+  .act { display: flex; gap: 11px; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--border); }
   .act:last-child { border-bottom: 0; }
   .act .ico { width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; flex: none; }
   .act .t { font-weight: 600; font-size: 13.5px; }
   .act .s { color: var(--text-3); font-size: 12px; margin-top: 3px; }
   .act .time { margin-inline-start: auto; color: var(--text-3); font-size: 11px; white-space: nowrap; }
 
-  .row-bot { display: grid; grid-template-columns: 1.55fr 1.5fr 1.4fr; gap: 16px; }
+  .row-bot { display: grid; grid-template-columns: 1.85fr 1.2fr 1.05fr; gap: 16px; }
   .bars { display: flex; align-items: flex-end; justify-content: space-around; gap: 8px; height: 180px; padding-top: 6px; }
   .bcol { display: grid; justify-items: center; gap: 6px; width: 60px; }
   .bcol .v { font-size: 12px; font-weight: 700; color: var(--text-2); }
@@ -297,8 +297,8 @@
               <h3><span class="ti" style="background:var(--primary-soft);color:var(--primary)"><svg class="i" viewBox="0 0 24 24" style="width:14px;height:14px"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg></span>Request Overview</h3>
               <div class="seg" id="rangeSeg"><button class="on" data-r="30">This Month</button><button data-r="90">Last 3 Months</button><button data-r="365">Last Year</button></div>
             </div>
-            <div class="chart" id="trendWrap" style="height:236px">
-              <svg id="trend" viewBox="0 0 560 236" width="100%" height="236" role="img" aria-label="Request overview"></svg>
+            <div class="chart" id="trendWrap" style="height:200px">
+              <svg id="trend" viewBox="0 0 560 200" width="100%" height="200" role="img" aria-label="Request overview"></svg>
               <div class="tip" id="trendTip" style="display:none"></div>
             </div>
           </div>
@@ -474,7 +474,7 @@
   };
   let range = 30;
   function drawTrend() {
-    const svg = $('#trend'), tip = $('#trendTip'), W = 560, H = 236, P = { l: 30, r: 18, t: 24, b: 30 };
+    const svg = $('#trend'), tip = $('#trendTip'), W = 560, H = 200, P = { l: 30, r: 18, t: 24, b: 30 };
     const s = series[range], n = s.total.length, max = s.ticks[s.ticks.length - 1];
     const x = i => P.l + (i * (W - P.l - P.r)) / (n - 1);
     const y = v => H - P.b - (v / max) * (H - P.t - P.b);
