@@ -6,213 +6,191 @@
 <title>FlowPro BPA: UI Prototype</title>
 <style>
   :root {
-    --bg: #eef3fb; --surface: #ffffff; --surface-2: #f5f8fd; --border: #e3eaf5;
-    --text: #0f1b33; --text-2: #4b5a75; --text-3: #7d8aa3;
-    --primary: #2563eb; --primary-ink: #ffffff; --primary-soft: #e6eeff;
-    --success: #16a34a; --success-soft: #dcfce7;
-    --warning: #ea8a0c; --warning-soft: #ffedd5;
-    --danger: #e11d48; --danger-soft: #ffe4ea;
-    --violet: #7c3aed; --violet-soft: #ede9fe;
-    --sky: #0ea5e9;
-    --sidebar-1: #0b1a3d; --sidebar-2: #0d2556; --sidebar-ink: #b8c6e0; --sidebar-active: #2563eb;
-    --panel-1: #1d4ed8; --panel-2: #0b2a6f;
-    --kpi-blue: linear-gradient(135deg, #e5efff, #f7faff);
-    --kpi-green: linear-gradient(135deg, #d9f8e6, #f5fdf8);
-    --kpi-orange: linear-gradient(135deg, #ffe9d2, #fffaf3);
-    --kpi-purple: linear-gradient(135deg, #ece5ff, #faf7ff);
-    --shadow: 0 1px 2px rgba(15,27,51,.04), 0 10px 30px rgba(15,27,51,.06);
-    --radius: 18px;
+    --bg: #eef3fa; --surface: #ffffff; --border: #e5ebf4;
+    --text: #0e1a33; --text-2: #4a5873; --text-3: #8290a8;
+    --primary: #2563eb; --primary-soft: #e8efff;
+    --green: #22c55e; --green-d: #16a34a; --green-soft: #dcfce7;
+    --orange: #f59e0b; --orange-d: #f97316; --orange-soft: #ffeedb;
+    --purple: #8b5cf6; --purple-soft: #efe9ff;
+    --red: #ef4444; --cyan: #22d3ee;
+    --side-1: #0c1d44; --side-2: #0a1838; --side-ink: #aab8d6; --side-active: #2563eb;
+    --panel-1: #1e40af; --panel-2: #0b1c4f;
+    --kpi-blue: linear-gradient(120deg, #e6eeff 0%, #f6f9ff 100%);
+    --kpi-green: linear-gradient(120deg, #d7f7e5 0%, #f4fdf8 100%);
+    --kpi-orange: linear-gradient(120deg, #ffe7cc 0%, #fff9f2 100%);
+    --kpi-purple: linear-gradient(120deg, #eae3ff 0%, #faf8ff 100%);
+    --banner-1: #8fd3f7; --banner-2: #fde7b0; --banner-3: #fdb97a;
+    --shadow: 0 1px 2px rgba(14,26,51,.05), 0 8px 26px rgba(14,26,51,.06);
   }
   [data-theme="dark"] {
-    --bg: #070e1d; --surface: #0f1a2e; --surface-2: #142138; --border: #1f2e4a;
+    --bg: #070e1d; --surface: #0f1a2e; --border: #1e2d48;
     --text: #e8eef9; --text-2: #a7b4cc; --text-3: #7b8aa6;
-    --primary: #5b9bff; --primary-ink: #06101f; --primary-soft: #1a2f57;
-    --success: #34d399; --success-soft: #0f3a2b;
-    --warning: #fbbf24; --warning-soft: #3d2c0c;
-    --danger: #fb7185; --danger-soft: #3f1420;
-    --violet: #a78bfa; --violet-soft: #2a1f4f;
-    --sky: #38bdf8;
-    --sidebar-1: #060c1b; --sidebar-2: #0a1530; --sidebar-ink: #93a4c4; --sidebar-active: #2563eb;
-    --panel-1: #1e40af; --panel-2: #0a1f55;
-    --kpi-blue: linear-gradient(135deg, #14264a, #0f1a2e);
-    --kpi-green: linear-gradient(135deg, #0f3328, #0f1a2e);
-    --kpi-orange: linear-gradient(135deg, #3a2a10, #0f1a2e);
-    --kpi-purple: linear-gradient(135deg, #2a1f4f, #0f1a2e);
+    --primary: #5b9bff; --primary-soft: #1a2f57;
+    --green-soft: #0f3a2b; --orange-soft: #3d2c0c; --purple-soft: #2a1f4f;
+    --side-1: #060c1b; --side-2: #0a1530;
+    --kpi-blue: linear-gradient(120deg, #14264a, #0f1a2e);
+    --kpi-green: linear-gradient(120deg, #0f3328, #0f1a2e);
+    --kpi-orange: linear-gradient(120deg, #3a2a10, #0f1a2e);
+    --kpi-purple: linear-gradient(120deg, #2a1f4f, #0f1a2e);
+    --banner-1: #0c2a4d; --banner-2: #1e3a5f; --banner-3: #5a3514;
     --shadow: none;
   }
   * { box-sizing: border-box; }
-  body { margin: 0; font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans Arabic", sans-serif; background: var(--bg); color: var(--text); font-size: 14px; }
-  button, input, select { font: inherit; color: inherit; }
-  svg.i { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+  body { margin: 0; font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans Arabic", sans-serif; background: var(--bg); color: var(--text); font-size: 13px; }
+  button, input { font: inherit; color: inherit; }
+  .i { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; flex: none; }
 
-  .app { display: grid; grid-template-columns: 250px 1fr; min-height: 100vh; }
-  aside { background: linear-gradient(180deg, var(--sidebar-1), var(--sidebar-2)); color: var(--sidebar-ink); padding: 22px 16px; display: flex; flex-direction: column; gap: 4px; }
-  .brand { display: flex; align-items: center; gap: 10px; padding: 2px 8px 22px; }
-  .logo { width: 38px; height: 38px; border-radius: 12px; background: linear-gradient(135deg, #3b82f6, #6366f1); display: grid; place-items: center; box-shadow: 0 6px 18px rgba(59,130,246,.45); }
-  .brand b { color: #fff; font-size: 19px; letter-spacing: -.01em; display: block; }
-  .brand small { color: #7f90b3; font-size: 10.5px; }
-  .nav a { display: flex; align-items: center; gap: 12px; padding: 11px 14px; border-radius: 12px; color: var(--sidebar-ink); text-decoration: none; cursor: pointer; font-weight: 500; }
-  .nav a:hover { background: rgba(255,255,255,.06); color: #fff; }
-  .nav a.active { background: linear-gradient(90deg, #2563eb, #3b82f6); color: #fff; box-shadow: 0 8px 20px rgba(37,99,235,.35); }
-  .badge { margin-inline-start: auto; background: #ef4444; color: #fff; border-radius: 999px; font-size: 11px; padding: 1px 7px; font-weight: 700; }
-  .org { margin-top: auto; display: flex; align-items: center; gap: 10px; padding: 12px; border-radius: 14px; background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.07); }
-  .org .av { width: 36px; height: 36px; border-radius: 10px; background: linear-gradient(135deg,#f59e0b,#f97316); display: grid; place-items: center; color: #fff; font-weight: 800; }
-  .org b { color: #fff; display: block; font-size: 13px; }
-  .org small { color: #7f90b3; font-size: 11px; }
+  .app { display: grid; grid-template-columns: 206px 1fr; min-height: 100vh; }
+  aside { background: linear-gradient(180deg, var(--side-1), var(--side-2)); color: var(--side-ink); padding: 18px 14px 14px; display: flex; flex-direction: column; }
+  .brand { display: flex; align-items: center; gap: 9px; padding: 4px 8px 26px; }
+  .brand .logo { width: 30px; height: 30px; border-radius: 9px; background: linear-gradient(135deg, #2563eb, #7c3aed); display: grid; place-items: center; }
+  .brand b { color: #fff; font-size: 17px; display: block; line-height: 1; }
+  .brand small { color: #7f90b3; font-size: 8.5px; }
+  .nav a { display: flex; align-items: center; gap: 12px; height: 42px; padding: 0 12px; border-radius: 10px; color: var(--side-ink); text-decoration: none; cursor: pointer; font-size: 13px; font-weight: 500; margin-bottom: 2px; }
+  .nav a:hover { color: #fff; background: rgba(255,255,255,.05); }
+  .nav a.active { background: linear-gradient(90deg, #2563eb, #3b82f6); color: #fff; box-shadow: 0 6px 16px rgba(37,99,235,.35); }
+  .badge { margin-inline-start: auto; background: var(--red); color: #fff; border-radius: 999px; font-size: 10px; min-width: 18px; height: 18px; display: grid; place-items: center; font-weight: 700; padding: 0 5px; }
+  .promo { margin-top: 26px; border-radius: 16px; padding: 16px 16px 18px; background: linear-gradient(160deg, #1e40af, #0b1c4f); color: #fff; position: relative; overflow: hidden; }
+  .promo h4 { margin: 0; font-size: 15px; line-height: 1.25; }
+  .promo p { margin: 6px 0 12px; font-size: 11px; color: #c7d2ea; line-height: 1.4; }
+  .promo .btn-sm { background: #2563eb; color: #fff; border: 0; border-radius: 9px; padding: 8px 14px; font-weight: 600; font-size: 12px; cursor: pointer; }
+  .promo svg.rocket { position: absolute; inset-inline-end: 8px; top: 12px; width: 44px; height: 44px; }
+  .me { margin-top: auto; display: flex; align-items: center; gap: 10px; padding: 10px 8px; border-top: 1px solid rgba(255,255,255,.08); }
+  .me .av { width: 34px; height: 34px; border-radius: 50%; background: linear-gradient(135deg,#fb923c,#f59e0b); display: grid; place-items: center; color: #fff; font-weight: 800; font-size: 13px; }
+  .me b { color: #fff; display: block; font-size: 12.5px; }
+  .me small { font-size: 10.5px; color: #7f90b3; }
 
   main { min-width: 0; }
-  header.top { display: flex; align-items: center; gap: 12px; padding: 18px 28px 6px; }
-  .search { flex: 1; max-width: 560px; display: flex; align-items: center; gap: 10px; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 11px 14px; color: var(--text-3); box-shadow: var(--shadow); }
-  .search input { border: 0; background: transparent; outline: none; flex: 1; min-width: 0; }
+  header.top { height: 74px; display: flex; align-items: center; gap: 12px; padding: 0 24px; }
+  .search { width: 532px; height: 42px; display: flex; align-items: center; gap: 10px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 0 14px; color: var(--text-3); box-shadow: var(--shadow); }
+  .search input { border: 0; background: transparent; outline: none; flex: 1; font-size: 13px; }
   .spacer { flex: 1; }
-  .pill { position: relative; display: inline-flex; align-items: center; gap: 8px; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 10px 14px; cursor: pointer; box-shadow: var(--shadow); color: var(--text-2); font-weight: 500; }
-  .pill .count { position: absolute; top: -6px; inset-inline-end: -6px; background: #ef4444; color: #fff; border-radius: 999px; font-size: 10px; font-weight: 700; padding: 1px 6px; }
-  .org-pill b { color: var(--text); }
-  .content { padding: 18px 28px 40px; display: grid; gap: 18px; }
-  .view { display: none; gap: 18px; }
+  .hbtn { height: 42px; display: inline-flex; align-items: center; gap: 8px; padding: 0 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; cursor: pointer; color: var(--text-2); box-shadow: var(--shadow); font-size: 13px; position: relative; }
+  .hbtn .count { position: absolute; top: -5px; inset-inline-end: -5px; background: var(--red); color: #fff; border-radius: 999px; font-size: 9.5px; font-weight: 700; min-width: 16px; height: 16px; display: grid; place-items: center; }
+  .sep { width: 1px; height: 26px; background: var(--border); }
+  .orgbtn { display: inline-flex; align-items: center; gap: 9px; height: 42px; padding: 0 12px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; cursor: pointer; font-weight: 600; box-shadow: var(--shadow); }
+  .orgbtn .logo { width: 24px; height: 24px; border-radius: 7px; background: linear-gradient(135deg,#fbbf24,#f97316); }
+
+  .content { padding: 4px 24px 24px; display: grid; gap: 16px; }
+  .view { display: none; gap: 16px; }
   .view.active { display: grid; }
 
-  .hero-row { display: grid; grid-template-columns: 1fr 300px; gap: 18px; }
-  .banner { position: relative; border-radius: var(--radius); overflow: hidden; min-height: 210px; background: linear-gradient(120deg, #7dd3fc 0%, #bae6fd 35%, #fde68a 75%, #fdba74 100%); box-shadow: var(--shadow); }
-  [data-theme="dark"] .banner { background: linear-gradient(120deg, #0c2a4d 0%, #1e3a5f 40%, #3b2a14 80%, #5a3514 100%); }
-  .banner svg.sky { position: absolute; inset: 0; width: 100%; height: 100%; }
-  .banner .txt { position: absolute; inset: 0; padding: 30px 34px; display: flex; flex-direction: column; justify-content: center; gap: 8px; }
-  .banner h1 { margin: 0; font-size: 34px; letter-spacing: -.02em; color: #0b1a3d; }
-  [data-theme="dark"] .banner h1 { color: #fff; }
-  .banner p { margin: 0; color: #223456; font-size: 15px; }
-  [data-theme="dark"] .banner p { color: #c9d5ea; }
-  .date-chip { margin-top: 8px; display: inline-flex; align-items: center; gap: 8px; width: fit-content; background: rgba(255,255,255,.75); color: #0b1a3d; border-radius: 12px; padding: 8px 12px; font-weight: 600; backdrop-filter: blur(6px); }
-  [data-theme="dark"] .date-chip { background: rgba(15,26,46,.7); color: #e8eef9; }
-
-  .qa-panel { border-radius: var(--radius); padding: 18px; color: #fff; background: radial-gradient(120% 120% at 100% 0%, var(--panel-1), var(--panel-2)); box-shadow: 0 16px 40px rgba(29,78,216,.25); position: relative; overflow: hidden; }
-  .qa-panel::after { content: ""; position: absolute; inset-inline-end: -40px; bottom: -40px; width: 180px; height: 180px; border-radius: 50%; background: rgba(255,255,255,.06); }
-  .qa-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
-  .qa-head h3 { margin: 0; font-size: 16px; display: flex; align-items: center; gap: 8px; }
-  .arrow-btn { width: 30px; height: 30px; border-radius: 10px; background: rgba(255,255,255,.12); display: grid; place-items: center; cursor: pointer; border: 0; color: #fff; }
-  .qa-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; position: relative; z-index: 1; }
-  .qa-tile { border: 1px solid rgba(255,255,255,.14); background: rgba(255,255,255,.08); border-radius: 14px; padding: 14px 10px; display: grid; justify-items: center; gap: 8px; text-align: center; cursor: pointer; font-size: 12.5px; font-weight: 600; color: #fff; transition: transform .15s, background .15s; }
-  .qa-tile:hover { background: rgba(255,255,255,.16); transform: translateY(-1px); }
-  .qa-tile .i { width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; background: rgba(255,255,255,.14); }
+  .row-top { display: grid; grid-template-columns: 1fr 292px; gap: 16px; }
+  .banner { position: relative; height: 156px; border-radius: 16px; overflow: hidden; background: linear-gradient(115deg, var(--banner-1) 0%, #d8ecf8 40%, var(--banner-2) 70%, var(--banner-3) 100%); box-shadow: var(--shadow); }
+  .banner svg.scene { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .banner .txt { position: absolute; left: 22px; top: 0; bottom: 0; display: flex; flex-direction: column; justify-content: center; gap: 4px; }
+  [dir="rtl"] .banner .txt { left: auto; right: 22px; }
+  .banner h1 { margin: 0; font-size: 28px; letter-spacing: -.02em; color: #0b1a3d; font-weight: 800; }
+  .banner p { margin: 0; color: #213556; font-size: 13.5px; }
+  .banner .date { margin-top: 10px; display: inline-flex; align-items: center; gap: 8px; color: #0b1a3d; font-weight: 600; font-size: 13px; }
+  .qa { border-radius: 16px; padding: 14px 16px 16px; color: #fff; background: radial-gradient(130% 110% at 100% 0%, var(--panel-1) 0%, var(--panel-2) 100%); box-shadow: 0 14px 34px rgba(30,64,175,.28); display: flex; flex-direction: column; }
+  .qa-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+  .qa-head h3 { margin: 0; font-size: 14px; display: flex; align-items: center; gap: 8px; font-weight: 700; }
+  .arrow { width: 26px; height: 26px; border-radius: 8px; background: rgba(255,255,255,.12); display: grid; place-items: center; border: 0; color: #fff; cursor: pointer; }
+  .qa-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; flex: 1; }
+  .tile { background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.1); border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 7px; text-align: center; font-size: 11.5px; font-weight: 600; cursor: pointer; }
+  .tile:hover { background: rgba(255,255,255,.14); }
+  .tile .ti { width: 30px; height: 30px; display: grid; place-items: center; }
 
   .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
-  .kpi { position: relative; overflow: hidden; border-radius: var(--radius); padding: 18px; border: 1px solid var(--border); box-shadow: var(--shadow); display: flex; gap: 14px; align-items: flex-start; min-height: 118px; }
-  .kpi.blue { background: var(--kpi-blue); }
-  .kpi.green { background: var(--kpi-green); }
-  .kpi.orange { background: var(--kpi-orange); }
-  .kpi.purple { background: var(--kpi-purple); }
-  .kpi .ico { width: 46px; height: 46px; border-radius: 14px; display: grid; place-items: center; color: #fff; flex: none; box-shadow: 0 8px 18px rgba(0,0,0,.12); }
-  .kpi .lbl { color: var(--text-2); font-size: 13px; font-weight: 500; }
-  .kpi .num { font-size: 30px; font-weight: 800; letter-spacing: -.02em; margin-top: 2px; }
-  .delta { font-size: 12px; font-weight: 700; margin-top: 2px; display: inline-flex; gap: 4px; align-items: center; }
-  .up { color: var(--success); } .down { color: var(--danger); }
-  .kpi svg.spark { position: absolute; inset-inline-end: 10px; bottom: 8px; width: 110px; height: 44px; }
+  .kpi { position: relative; height: 118px; border-radius: 16px; padding: 18px 20px; border: 1px solid var(--border); box-shadow: var(--shadow); display: flex; gap: 14px; align-items: center; overflow: hidden; }
+  .kpi.blue { background: var(--kpi-blue); } .kpi.green { background: var(--kpi-green); }
+  .kpi.orange { background: var(--kpi-orange); } .kpi.purple { background: var(--kpi-purple); }
+  .kpi .ico { width: 44px; height: 44px; border-radius: 13px; display: grid; place-items: center; color: #fff; flex: none; }
+  .kpi .lbl { color: var(--text-2); font-size: 12.5px; font-weight: 500; }
+  .kpi .num { font-size: 26px; font-weight: 800; letter-spacing: -.02em; line-height: 1.1; margin-top: 2px; }
+  .delta { font-size: 11px; font-weight: 700; display: inline-flex; align-items: center; gap: 3px; margin-top: 2px; }
+  .up { color: var(--green-d); } .down { color: var(--red); }
+  .kpi svg.spark { position: absolute; inset-inline-end: 12px; bottom: 10px; width: 100px; height: 40px; }
 
-  .grid-main { display: grid; grid-template-columns: 1.7fr 1fr 1fr; gap: 18px; }
-  .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); padding: 18px; min-width: 0; }
-  .card-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; }
-  .card-head h3 { margin: 0; font-size: 16px; display: flex; align-items: center; gap: 10px; }
-  .card-head h3 .ti { width: 30px; height: 30px; border-radius: 10px; display: grid; place-items: center; }
-  .link { color: var(--primary); text-decoration: none; cursor: pointer; font-weight: 600; font-size: 13px; display: inline-flex; gap: 6px; align-items: center; }
-  .seg { display: inline-flex; background: var(--surface-2); border: 1px solid var(--border); border-radius: 12px; padding: 3px; }
-  .seg button { border: 0; background: transparent; padding: 7px 12px; border-radius: 9px; cursor: pointer; color: var(--text-2); font-size: 13px; font-weight: 500; white-space: nowrap; }
-  .seg button.on { background: var(--primary); color: var(--primary-ink); box-shadow: 0 6px 14px rgba(37,99,235,.3); }
-  .legend { display: flex; gap: 14px; color: var(--text-2); font-size: 12px; align-items: center; flex-wrap: wrap; }
-  .dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; margin-inline-end: 6px; }
+  .row-mid { display: grid; grid-template-columns: 1.85fr 1.2fr 1.05fr; gap: 16px; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; box-shadow: var(--shadow); padding: 16px 18px; min-width: 0; }
+  .card-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
+  .card-head h3 { margin: 0; font-size: 14.5px; display: flex; align-items: center; gap: 9px; font-weight: 700; }
+  .card-head h3 .ti { width: 26px; height: 26px; border-radius: 8px; display: grid; place-items: center; }
+  .link { color: var(--primary); cursor: pointer; font-weight: 600; font-size: 12px; display: inline-flex; gap: 6px; align-items: center; text-decoration: none; }
+  .seg { display: inline-flex; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 3px; gap: 2px; }
+  .seg button { border: 0; background: transparent; padding: 6px 11px; border-radius: 8px; cursor: pointer; color: var(--text-2); font-size: 12px; font-weight: 500; white-space: nowrap; }
+  .seg button.on { background: var(--primary); color: #fff; box-shadow: 0 4px 12px rgba(37,99,235,.3); }
+  .legend { display: flex; gap: 14px; color: var(--text-2); font-size: 11.5px; align-items: center; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-inline-end: 6px; }
+  .chart { position: relative; }
+  .tip { position: absolute; transform: translate(-100%, -120%); background: #0e1a33; color: #fff; padding: 6px 11px; border-radius: 9px; font-size: 11.5px; font-weight: 700; pointer-events: none; white-space: nowrap; }
+  .tip::after { content: ""; position: absolute; left: 50%; bottom: -4px; width: 8px; height: 8px; background: inherit; transform: translateX(-50%) rotate(45deg); }
 
-  .chart-wrap { position: relative; }
-  .tip { position: absolute; transform: translate(-50%, -110%); background: var(--text); color: var(--bg); padding: 6px 10px; border-radius: 10px; font-size: 12px; font-weight: 700; pointer-events: none; white-space: nowrap; box-shadow: 0 8px 20px rgba(0,0,0,.2); }
-  .tip::after { content: ""; position: absolute; left: 50%; bottom: -5px; width: 10px; height: 10px; background: inherit; transform: translateX(-50%) rotate(45deg); }
+  .donut-wrap { display: grid; grid-template-columns: 170px 1fr; gap: 12px; align-items: center; height: 230px; }
+  .dleg { display: grid; gap: 16px; }
+  .dleg div { display: flex; align-items: center; justify-content: space-between; color: var(--text-2); font-size: 12.5px; }
+  .dleg strong { color: var(--text); font-size: 12.5px; }
 
-  .donut-row { display: grid; grid-template-columns: 180px 1fr; gap: 14px; align-items: center; }
-  .dleg { display: grid; gap: 14px; }
-  .dleg div { display: flex; align-items: center; justify-content: space-between; color: var(--text-2); font-size: 13px; }
-  .dleg strong { color: var(--text); }
-
-  .bars { display: flex; align-items: flex-end; justify-content: space-between; gap: 10px; height: 200px; padding-top: 14px; }
-  .bar-col { flex: 1; display: grid; justify-items: center; gap: 8px; align-content: end; height: 100%; }
-  .bar-col .val { font-size: 12px; font-weight: 700; color: var(--text-2); }
-  .bar { width: 100%; max-width: 54px; border-radius: 12px 12px 6px 6px; min-height: 8px; }
-  .bar-col .lbl { font-size: 11.5px; color: var(--text-3); text-align: center; }
-
-  .grid-bottom { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 18px; }
-  .act { display: flex; gap: 12px; align-items: center; padding: 8px 0; border-bottom: 1px dashed var(--border); }
+  .act { display: flex; gap: 11px; align-items: center; padding: 9px 0; border-bottom: 1px solid var(--border); }
   .act:last-child { border-bottom: 0; }
-  .act .ico { width: 40px; height: 40px; border-radius: 13px; display: grid; place-items: center; flex: none; }
-  .act .t { font-weight: 600; font-size: 13.5px; }
-  .act .s { color: var(--text-3); font-size: 12px; margin-top: 2px; }
-  .act .time { margin-inline-start: auto; color: var(--text-3); font-size: 12px; white-space: nowrap; }
-  .tabs { display: flex; gap: 6px; margin-bottom: 10px; flex-wrap: wrap; }
-  .tabs button { border: 0; background: transparent; padding: 7px 12px; border-radius: 10px; cursor: pointer; color: var(--text-2); font-size: 13px; font-weight: 500; }
-  .tabs button.on { background: var(--primary-soft); color: var(--primary); font-weight: 700; }
-  .task { display: flex; align-items: center; gap: 12px; padding: 11px 0; border-bottom: 1px dashed var(--border); }
+  .act .ico { width: 36px; height: 36px; border-radius: 11px; display: grid; place-items: center; flex: none; }
+  .act .t { font-weight: 600; font-size: 12.5px; }
+  .act .s { color: var(--text-3); font-size: 11px; margin-top: 2px; }
+  .act .time { margin-inline-start: auto; color: var(--text-3); font-size: 11px; white-space: nowrap; }
+
+  .row-bot { display: grid; grid-template-columns: 1.55fr 1.5fr 1.4fr; gap: 16px; }
+  .bars { display: flex; align-items: flex-end; justify-content: space-around; gap: 8px; height: 180px; padding-top: 6px; }
+  .bcol { display: grid; justify-items: center; gap: 6px; width: 60px; }
+  .bcol .v { font-size: 12px; font-weight: 700; color: var(--text-2); }
+  .bcol .bar { width: 56px; border-radius: 10px 10px 4px 4px; }
+  .bcol .l { font-size: 11px; color: var(--text-3); }
+  .tabs { display: flex; gap: 4px; margin: 2px 0 6px; border-bottom: 1px solid var(--border); }
+  .tabs button { border: 0; background: transparent; padding: 7px 10px; cursor: pointer; color: var(--text-2); font-size: 12px; font-weight: 500; border-bottom: 2px solid transparent; margin-bottom: -1px; }
+  .tabs button.on { color: var(--primary); border-bottom-color: var(--primary); font-weight: 700; }
+  .task { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px dashed var(--border); font-size: 12px; }
   .task:last-child { border-bottom: 0; }
-  .task .chk { width: 22px; height: 22px; border-radius: 7px; border: 2px solid var(--primary); display: grid; place-items: center; color: var(--primary); flex: none; }
-  .task .tt { font-weight: 600; font-size: 13.5px; }
-  .prio { font-size: 11.5px; font-weight: 700; padding: 4px 10px; border-radius: 999px; white-space: nowrap; }
-  .p-high { background: var(--danger-soft); color: var(--danger); }
-  .p-med { background: var(--warning-soft); color: var(--warning); }
-  .p-norm { background: var(--primary-soft); color: var(--primary); }
-  .task .when { color: var(--text-3); font-size: 12px; white-space: nowrap; }
+  .chk { width: 16px; height: 16px; border-radius: 5px; border: 1.5px solid var(--border); display: grid; place-items: center; flex: none; }
+  .chk.on { background: var(--primary); border-color: var(--primary); color: #fff; }
+  .task .tt { flex: 1; font-weight: 500; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .prio { font-size: 10.5px; font-weight: 700; padding: 3px 9px; border-radius: 999px; white-space: nowrap; }
+  .p-high { background: #ffe4ea; color: #e11d48; } .p-med { background: #ffedd5; color: #ea580c; } .p-norm { background: var(--primary-soft); color: var(--primary); }
+  .task .when { color: var(--text-3); font-size: 10.5px; white-space: nowrap; width: 62px; text-align: end; }
+  .build { border-radius: 16px; padding: 18px 20px; color: #fff; background: radial-gradient(120% 120% at 0% 0%, #3b3fb8, #0b1a3d 75%); position: relative; overflow: hidden; cursor: pointer; display: flex; flex-direction: column; }
+  .build h3 { margin: 0; font-size: 18px; line-height: 1.2; font-weight: 800; }
+  .build p { margin: 6px 0 0; color: #d4dcff; font-size: 12px; }
+  .build .go { margin-top: auto; align-self: flex-start; background: #fff; color: #0b1a3d; border: 0; border-radius: 10px; padding: 9px 16px; font-weight: 700; font-size: 12px; cursor: pointer; display: inline-flex; gap: 8px; align-items: center; }
+  .build svg.art { position: absolute; inset-inline-end: 0; top: 40px; width: 170px; height: 150px; }
 
-  .build { border-radius: var(--radius); padding: 20px; color: #fff; background: radial-gradient(120% 120% at 0% 0%, #4338ca, #0b1a3d); position: relative; overflow: hidden; display: flex; flex-direction: column; justify-content: space-between; min-height: 230px; cursor: pointer; }
-  .build h3 { margin: 0; font-size: 19px; line-height: 1.2; }
-  .build p { margin: 8px 0 0; color: #c7d2fe; font-size: 13px; }
-  .build .go { margin-top: 14px; background: #fff; color: #0b1a3d; border: 0; border-radius: 12px; padding: 10px 16px; font-weight: 700; width: fit-content; cursor: pointer; display: inline-flex; gap: 8px; align-items: center; }
-  .build svg.art { position: absolute; inset-inline-end: -10px; bottom: -6px; width: 180px; height: 150px; opacity: .95; }
-
-  .btn { border: 0; border-radius: 12px; padding: 10px 16px; cursor: pointer; background: var(--primary); color: var(--primary-ink); font-weight: 700; display: inline-flex; gap: 8px; align-items: center; box-shadow: 0 8px 18px rgba(37,99,235,.25); }
-  .btn.ghost { background: var(--surface); color: var(--text); border: 1px solid var(--border); box-shadow: none; }
+  .btn { border: 0; border-radius: 11px; padding: 10px 16px; cursor: pointer; background: var(--primary); color: #fff; font-weight: 700; display: inline-flex; gap: 8px; align-items: center; font-size: 13px; }
+  .btn.ghost { background: var(--surface); color: var(--text); border: 1px solid var(--border); }
   .hero { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
-  .hero h1 { margin: 0; font-size: 24px; letter-spacing: -.01em; }
+  .hero h1 { margin: 0; font-size: 24px; }
   .hero p { margin: 4px 0 0; color: var(--text-2); }
-  .status { font-size: 12px; font-weight: 700; padding: 5px 11px; border-radius: 999px; display: inline-flex; gap: 6px; align-items: center; white-space: nowrap; }
-  .s-pending { background: var(--warning-soft); color: var(--warning); }
-  .s-approved { background: var(--success-soft); color: var(--success); }
-  .s-rejected { background: var(--danger-soft); color: var(--danger); }
-  .s-returned { background: var(--violet-soft); color: var(--violet); }
-  .s-completed { background: var(--primary-soft); color: var(--primary); }
-  .foot-note { color: var(--text-3); font-size: 12px; }
-  .tabs-bar { display: flex; gap: 4px; border-bottom: 1px solid var(--border); margin-bottom: 14px; flex-wrap: wrap; }
-  .tabs-bar button { border: 0; background: transparent; padding: 10px 12px; cursor: pointer; color: var(--text-2); border-bottom: 2px solid transparent; }
-  .tabs-bar button.on { color: var(--primary); border-bottom-color: var(--primary); font-weight: 700; }
-  .tabs-bar button .n { background: var(--surface-2); border-radius: 999px; padding: 1px 8px; margin-inline-start: 6px; font-size: 12px; }
-  .tabs-bar button.on .n { background: var(--primary-soft); color: var(--primary); }
+  .status { font-size: 11.5px; font-weight: 700; padding: 5px 10px; border-radius: 999px; display: inline-flex; gap: 6px; align-items: center; white-space: nowrap; }
+  .s-pending { background: #ffedd5; color: #ea580c; } .s-approved { background: var(--green-soft); color: var(--green-d); }
+  .s-rejected { background: #ffe4ea; color: #e11d48; } .s-returned { background: var(--purple-soft); color: var(--purple); }
   table { width: 100%; border-collapse: collapse; }
-  th, td { padding: 13px 10px; text-align: start; border-bottom: 1px solid var(--border); }
-  th { color: var(--text-3); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: .03em; }
-  tr:hover td { background: var(--surface-2); }
+  th, td { padding: 12px 10px; text-align: start; border-bottom: 1px solid var(--border); font-size: 12.5px; }
+  th { color: var(--text-3); font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: .03em; }
   .who { display: flex; align-items: center; gap: 8px; }
-  .mini { width: 28px; height: 28px; border-radius: 50%; background: var(--violet-soft); color: var(--violet); display: grid; place-items: center; font-size: 11px; font-weight: 700; }
-  .pager { display: flex; justify-content: space-between; align-items: center; margin-top: 12px; color: var(--text-3); flex-wrap: wrap; gap: 10px; }
+  .mini { width: 26px; height: 26px; border-radius: 50%; background: var(--purple-soft); color: var(--purple); display: grid; place-items: center; font-size: 10.5px; font-weight: 700; }
+  .pager { display: flex; justify-content: space-between; align-items: center; margin-top: 12px; color: var(--text-3); font-size: 12px; }
   .pager .pg { display: flex; gap: 6px; }
-  .pager .pg span { border: 1px solid var(--border); border-radius: 9px; padding: 5px 11px; background: var(--surface); }
-  .pager .pg span.on { background: var(--primary); color: var(--primary-ink); border-color: transparent; }
-  .search-sm { display: flex; align-items: center; gap: 8px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 12px; padding: 9px 12px; color: var(--text-3); max-width: 340px; flex: 1; }
-  .search-sm input { border: 0; background: transparent; outline: none; flex: 1; min-width: 0; }
+  .pager .pg span { border: 1px solid var(--border); border-radius: 8px; padding: 4px 10px; background: var(--surface); }
+  .pager .pg span.on { background: var(--primary); color: #fff; border-color: transparent; }
   .detail-head { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
   .detail-head h2 { margin: 0; font-size: 20px; }
-  .detail-grid { display: grid; grid-template-columns: 1.6fr 1fr; gap: 18px; }
-  .kv { display: grid; grid-template-columns: 170px 1fr; gap: 12px 14px; }
+  .detail-grid { display: grid; grid-template-columns: 1.6fr 1fr; gap: 16px; }
+  .kv { display: grid; grid-template-columns: 170px 1fr; gap: 12px 14px; font-size: 12.5px; }
   .kv div:nth-child(odd) { color: var(--text-3); }
-  .flow { display: grid; gap: 0; }
-  .step { display: grid; grid-template-columns: 30px 1fr; gap: 12px; padding-bottom: 20px; position: relative; }
-  .step:not(:last-child)::before { content: ""; position: absolute; top: 30px; bottom: 0; left: 14px; width: 2px; background: var(--border); }
-  [dir="rtl"] .step:not(:last-child)::before { left: auto; right: 14px; }
-  .step .node { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; font-size: 12px; font-weight: 700; background: var(--surface-2); border: 2px solid var(--border); color: var(--text-3); }
-  .step.done .node { background: var(--success-soft); border-color: var(--success); color: var(--success); }
-  .step.now .node { background: var(--warning-soft); border-color: var(--warning); color: var(--warning); }
-  .toast { position: fixed; bottom: 20px; inset-inline-start: 50%; transform: translateX(-50%); background: var(--text); color: var(--bg); padding: 10px 14px; border-radius: 12px; display: none; box-shadow: 0 10px 30px rgba(0,0,0,.25); }
-
-  @media (max-width: 1280px) { .grid-main { grid-template-columns: 1fr 1fr; } .grid-main .card.wide { grid-column: 1 / -1; } .hero-row { grid-template-columns: 1fr; } }
-  @media (max-width: 1100px) { .kpis { grid-template-columns: 1fr 1fr; } .grid-bottom, .detail-grid { grid-template-columns: 1fr; } }
-  @media (max-width: 800px) { .app { grid-template-columns: 1fr; } aside { display: none; } .grid-main { grid-template-columns: 1fr; } }
+  .flow .step { display: grid; grid-template-columns: 30px 1fr; gap: 12px; padding-bottom: 20px; position: relative; }
+  .flow .step:not(:last-child)::before { content: ""; position: absolute; top: 30px; bottom: 0; left: 14px; width: 2px; background: var(--border); }
+  [dir="rtl"] .flow .step:not(:last-child)::before { left: auto; right: 14px; }
+  .node { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; font-size: 12px; font-weight: 700; background: var(--surface); border: 2px solid var(--border); color: var(--text-3); }
+  .done .node { background: var(--green-soft); border-color: var(--green-d); color: var(--green-d); }
+  .now .node { background: #ffedd5; border-color: var(--orange-d); color: var(--orange-d); }
+  .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--text); color: var(--bg); padding: 10px 14px; border-radius: 12px; display: none; }
+  @media (max-width: 1280px) { .row-top, .row-mid, .row-bot { grid-template-columns: 1fr 1fr; } .search { width: 100%; } }
+  @media (max-width: 900px) { .app { grid-template-columns: 1fr; } aside { display: none; } .kpis, .row-top, .row-mid, .row-bot { grid-template-columns: 1fr; } }
 </style>
 </head>
 <body>
 <div class="app">
   <aside>
     <div class="brand">
-      <div class="logo"><svg class="i" viewBox="0 0 24 24" style="stroke:#fff;stroke-width:2.4"><path d="M5 12l4.5 4.5L19 7"/></svg></div>
+      <div class="logo"><svg class="i" viewBox="0 0 24 24" style="stroke:#fff;stroke-width:2.6;width:16px;height:16px"><path d="M5 12l4.5 4.5L19 7"/></svg></div>
       <div><b>FlowPro</b><small>Business Process Automation</small></div>
     </div>
     <nav class="nav" id="nav">
@@ -226,7 +204,13 @@
       <a data-view="employees"><svg class="i" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0M16 4.5a3.5 3.5 0 0 1 0 7M21.5 20a6.5 6.5 0 0 0-3.5-5.7"/></svg>Employees</a>
       <a data-view="settings"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></svg>Settings</a>
     </nav>
-    <div class="org">
+    <div class="promo">
+      <svg class="rocket" viewBox="0 0 48 48"><path d="M30 8c6 0 10-2 10-2s-2 4-2 10c0 8-6 16-12 20l-6-6c4-6 10-14 10-22z" fill="#93c5fd"/><circle cx="28" cy="18" r="3.5" fill="#fff"/><path d="M12 30l-4 4 2 2 4-4zM8 36l4-1-3-3z" fill="#f59e0b"/></svg>
+      <h4>Automate More.<br>Work Smarter.</h4>
+      <p>Digitize your business processes with FlowPro.</p>
+      <button class="btn-sm">Learn More &rarr;</button>
+    </div>
+    <div class="me">
       <div class="av">A</div>
       <div><b>Ahmed Khan</b><small>Administrator</small></div>
     </div>
@@ -236,136 +220,131 @@
     <header class="top">
       <div class="search"><svg class="i" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><input placeholder="Search anything... (e.g. requests, employees)" aria-label="Search"></div>
       <div class="spacer"></div>
-      <button class="pill" id="themeBtn" title="Toggle theme"><svg class="i" viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg><span id="themeLabel">Dark</span></button>
-      <button class="pill" id="dirBtn" title="Toggle direction"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3.5 3 14.5 0 18M12 3c-3 3.5-3 14.5 0 18"/></svg><span id="dirLabel">English</span></button>
-      <button class="pill" title="Notifications"><svg class="i" viewBox="0 0 24 24"><path d="M6 8a6 6 0 1 1 12 0c0 7 3 8 3 8H3s3-1 3-8M10.3 20a2 2 0 0 0 3.4 0"/></svg><span class="count">3</span></button>
-      <div class="pill org-pill"><span class="dot" style="background:#f59e0b;width:20px;height:20px;border-radius:6px;margin:0"></span><b>ABC Construction</b><svg class="i" viewBox="0 0 24 24" style="width:14px;height:14px"><path d="M6 9l6 6 6-6"/></svg></div>
+      <button class="hbtn" title="Notifications"><svg class="i" viewBox="0 0 24 24"><path d="M6 8a6 6 0 1 1 12 0c0 7 3 8 3 8H3s3-1 3-8M10.3 20a2 2 0 0 0 3.4 0"/></svg><span class="count">3</span></button>
+      <div class="sep"></div>
+      <button class="hbtn" id="langBtn"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3.5 3 14.5 0 18M12 3c-3 3.5-3 14.5 0 18"/></svg><span id="langLabel">English</span></button>
+      <button class="hbtn" id="themeBtn"><svg class="i" viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg><span id="themeLabel">Dark</span></button>
+      <button class="orgbtn"><span class="logo"></span>ABC Construction <svg class="i" viewBox="0 0 24 24" style="width:14px;height:14px"><path d="M6 9l6 6 6-6"/></svg></button>
     </header>
 
     <div class="content">
 
       <!-- DASHBOARD -->
       <section class="view active" id="view-dashboard">
-        <div class="hero-row">
+        <div class="row-top">
           <div class="banner">
-            <svg class="sky" viewBox="0 0 800 260" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
-              <defs><linearGradient id="bld" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#1e3a8a" stop-opacity=".55"/><stop offset="1" stop-color="#0b1a3d" stop-opacity=".75"/></linearGradient></defs>
-              <circle cx="640" cy="70" r="46" fill="#fff7d6" opacity=".9"/>
-              <g fill="url(#bld)">
-                <rect x="420" y="110" width="60" height="150"/><rect x="486" y="70" width="48" height="190"/><rect x="540" y="130" width="70" height="130"/>
-                <rect x="616" y="90" width="54" height="170"/><rect x="676" y="120" width="60" height="140"/><rect x="740" y="150" width="60" height="110"/>
-                <rect x="300" y="150" width="54" height="110"/><rect x="360" y="120" width="46" height="140"/>
+            <svg class="scene" viewBox="0 0 1000 156" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
+              <defs><linearGradient id="gb" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#5b7fa8"/><stop offset="1" stop-color="#27415f"/></linearGradient>
+              <linearGradient id="gg" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#9dc7e6" stop-opacity=".9"/><stop offset="1" stop-color="#cfe6f2" stop-opacity=".9"/></linearGradient></defs>
+              <circle cx="760" cy="104" r="40" fill="#fff3c4" opacity=".85"/>
+              <g fill="url(#gg)"><rect x="600" y="60" width="120" height="96"/><rect x="700" y="40" width="90" height="116"/></g>
+              <g fill="url(#gb)">
+                <rect x="560" y="70" width="60" height="86"/><rect x="622" y="36" width="54" height="120"/><rect x="680" y="60" width="70" height="96"/>
+                <rect x="752" y="22" width="60" height="134"/><rect x="816" y="56" width="66" height="100"/><rect x="886" y="46" width="64" height="110"/>
+                <rect x="470" y="96" width="50" height="60"/><rect x="524" y="84" width="40" height="72"/>
               </g>
-              <g stroke="#0b1a3d" stroke-opacity=".55" stroke-width="3" fill="none">
-                <path d="M560 40V130M560 40H700M680 40V0M560 40L520 130"/>
-                <path d="M780 20V140M780 20H700M700 20L760 110"/>
-              </g>
-              <g fill="#ffffff" fill-opacity=".35"><rect x="498" y="90" width="8" height="12"/><rect x="516" y="90" width="8" height="12"/><rect x="498" y="120" width="8" height="12"/><rect x="630" y="110" width="8" height="12"/><rect x="646" y="110" width="8" height="12"/><rect x="630" y="140" width="8" height="12"/></g>
+              <g fill="#ffffff" fill-opacity=".45"><rect x="634" y="52" width="7" height="10"/><rect x="648" y="52" width="7" height="10"/><rect x="764" y="40" width="7" height="10"/><rect x="778" y="40" width="7" height="10"/><rect x="764" y="70" width="7" height="10"/><rect x="828" y="72" width="7" height="10"/><rect x="842" y="72" width="7" height="10"/><rect x="898" y="66" width="7" height="10"/></g>
+              <g stroke="#2b3f57" stroke-width="2.4" fill="none" stroke-opacity=".8"><path d="M820 0V58M820 0L905 44M905 44V58"/><path d="M742 0V22M742 0L800 34"/></g>
+              <rect x="0" y="134" width="1000" height="22" fill="#f8c77c" opacity=".35"/>
             </svg>
             <div class="txt">
               <h1>Good Morning, Ahmed!</h1>
               <p>Here's what's happening with your organization today.</p>
-              <div class="date-chip"><svg class="i" viewBox="0 0 24 24" style="width:16px;height:16px"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>Mon, Nov 10, 2025</div>
+              <div class="date"><svg class="i" viewBox="0 0 24 24" style="width:15px;height:15px"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>Mon, Nov 10, 2025</div>
             </div>
           </div>
-
-          <div class="qa-panel">
-            <div class="qa-head"><h3><svg class="i" viewBox="0 0 24 24" style="stroke:#fde047;fill:#fde047"><path d="M13 2L4 14h7l-1 8 9-12h-7z"/></svg>Quick Actions</h3><button class="arrow-btn" aria-label="More"><svg class="i" viewBox="0 0 24 24" style="width:16px;height:16px"><path d="M9 6l6 6-6 6"/></svg></button></div>
+          <div class="qa">
+            <div class="qa-head"><h3><svg class="i" viewBox="0 0 24 24" style="stroke:#fde047;fill:#fde047;width:16px;height:16px"><path d="M13 2L4 14h7l-1 8 9-12h-7z"/></svg>Quick Actions</h3><button class="arrow" aria-label="More"><svg class="i" viewBox="0 0 24 24" style="width:14px;height:14px"><path d="M9 6l6 6-6 6"/></svg></button></div>
             <div class="qa-grid">
-              <button class="qa-tile" data-go="newRequest"><span class="i"><svg class="i" viewBox="0 0 24 24"><circle cx="9" cy="20" r="1.5"/><circle cx="18" cy="20" r="1.5"/><path d="M3 4h2l2.5 11h10l2-7H7"/></svg></span>New Purchase Request</button>
-              <button class="qa-tile"><span class="i"><svg class="i" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/></svg></span>Request Leave</button>
-              <button class="qa-tile"><span class="i"><svg class="i" viewBox="0 0 24 24"><path d="M12 2l9 5v10l-9 5-9-5V7z"/><path d="M3 7l9 5 9-5M12 12v10"/></svg></span>Request Materials</button>
-              <button class="qa-tile" data-go="tasks"><span class="i"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8 12l3 3 5-6"/></svg></span>View My Tasks</button>
+              <div class="tile" data-go="newRequest"><span class="ti"><svg class="i" viewBox="0 0 24 24" style="width:24px;height:24px;stroke:#93c5fd"><circle cx="9" cy="20" r="1.5"/><circle cx="18" cy="20" r="1.5"/><path d="M3 4h2l2.5 11h10l2-7H7"/></svg></span>New Purchase<br>Request</div>
+              <div class="tile"><span class="ti"><svg class="i" viewBox="0 0 24 24" style="width:24px;height:24px;stroke:#4ade80"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/></svg></span>Request Leave</div>
+              <div class="tile"><span class="ti"><svg class="i" viewBox="0 0 24 24" style="width:24px;height:24px;stroke:#fdba74"><path d="M12 2l9 5v10l-9 5-9-5V7z"/><path d="M3 7l9 5 9-5M12 12v10"/></svg></span>Request Materials</div>
+              <div class="tile" data-go="tasks"><span class="ti"><svg class="i" viewBox="0 0 24 24" style="width:24px;height:24px;stroke:#4ade80"><circle cx="12" cy="12" r="9"/><path d="M8 12l3 3 5-6"/></svg></span>View My Tasks</div>
             </div>
           </div>
         </div>
 
         <div class="kpis">
           <div class="kpi blue">
-            <div class="ico" style="background:linear-gradient(135deg,#3b82f6,#1d4ed8)"><svg class="i" viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 8h6M9 12h6M9 16h4"/></svg></div>
-            <div><div class="lbl">Total Requests</div><div class="num">248</div><div class="delta up"><svg class="i" viewBox="0 0 24 24" style="width:12px;height:12px;stroke-width:3"><path d="M12 19V5M5 12l7-7 7 7"/></svg>12%</div></div>
-            <svg class="spark" data-pts="2,8,4,6,3,7,5,9,6,10" data-color="#3b82f6" viewBox="0 0 110 44"></svg>
+            <div class="ico" style="background:linear-gradient(135deg,#3b82f6,#2563eb)"><svg class="i" viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 8h6M9 12h6M9 16h4"/></svg></div>
+            <div><div class="lbl">Total Requests</div><div class="num">248</div><div class="delta up">&uarr; 12%</div></div>
+            <svg class="spark" data-pts="2,8,4,6,3,7,5,9,6,10" data-color="#2563eb" viewBox="0 0 100 40"></svg>
           </div>
           <div class="kpi green">
-            <div class="ico" style="background:linear-gradient(135deg,#22c55e,#15803d)"><svg class="i" viewBox="0 0 24 24"><path d="M5 12l4.5 4.5L19 7"/></svg></div>
-            <div><div class="lbl">Approved</div><div class="num">176</div><div class="delta up"><svg class="i" viewBox="0 0 24 24" style="width:12px;height:12px;stroke-width:3"><path d="M12 19V5M5 12l7-7 7 7"/></svg>15%</div></div>
-            <svg class="spark" data-pts="3,4,3,6,5,7,6,8,9,10" data-color="#16a34a" viewBox="0 0 110 44"></svg>
+            <div class="ico" style="background:linear-gradient(135deg,#34d399,#16a34a)"><svg class="i" viewBox="0 0 24 24" style="stroke-width:2.4"><path d="M5 12l4.5 4.5L19 7"/></svg></div>
+            <div><div class="lbl">Approved</div><div class="num">176</div><div class="delta up">&uarr; 15%</div></div>
+            <svg class="spark" data-pts="3,4,3,6,5,7,6,8,9,10" data-color="#16a34a" viewBox="0 0 100 40"></svg>
           </div>
           <div class="kpi orange">
-            <div class="ico" style="background:linear-gradient(135deg,#fb923c,#ea580c)"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M9 2h6"/></svg></div>
-            <div><div class="lbl">Pending Approval</div><div class="num">42</div><div class="delta down"><svg class="i" viewBox="0 0 24 24" style="width:12px;height:12px;stroke-width:3"><path d="M12 5v14M5 12l7 7 7-7"/></svg>8%</div></div>
-            <svg class="spark" data-pts="7,6,8,5,6,4,5,3,4,2" data-color="#f97316" viewBox="0 0 110 44"></svg>
+            <div class="ico" style="background:linear-gradient(135deg,#fbbf24,#f97316)"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M9 2h6"/></svg></div>
+            <div><div class="lbl">Pending Approval</div><div class="num">42</div><div class="delta down">&darr; 8%</div></div>
+            <svg class="spark" data-pts="7,6,8,5,6,4,5,3,4,2" data-color="#f97316" viewBox="0 0 100 40"></svg>
           </div>
           <div class="kpi purple">
-            <div class="ico" style="background:linear-gradient(135deg,#a855f7,#7c3aed)"><svg class="i" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></div>
-            <div><div class="lbl">Rejected</div><div class="num">30</div><div class="delta down"><svg class="i" viewBox="0 0 24 24" style="width:12px;height:12px;stroke-width:3"><path d="M12 5v14M5 12l7 7 7-7"/></svg>5%</div></div>
-            <svg class="spark" data-pts="3,4,3,5,4,6,5,7,6,8" data-color="#8b5cf6" viewBox="0 0 110 44"></svg>
+            <div class="ico" style="background:linear-gradient(135deg,#a78bfa,#7c3aed)"><svg class="i" viewBox="0 0 24 24" style="stroke-width:2.2"><path d="M6 6l12 12M18 6L6 18"/></svg></div>
+            <div><div class="lbl">Rejected</div><div class="num">30</div><div class="delta down">&darr; 5%</div></div>
+            <svg class="spark" data-pts="3,4,3,5,4,6,5,7,6,8" data-color="#8b5cf6" viewBox="0 0 100 40"></svg>
           </div>
         </div>
 
-        <div class="grid-main">
-          <div class="card wide" style="grid-column: span 1">
+        <div class="row-mid">
+          <div class="card">
             <div class="card-head">
-              <h3><span class="ti" style="background:var(--primary-soft);color:var(--primary)"><svg class="i" viewBox="0 0 24 24" style="width:16px;height:16px"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg></span>Request Overview</h3>
+              <h3><span class="ti" style="background:var(--primary-soft);color:var(--primary)"><svg class="i" viewBox="0 0 24 24" style="width:14px;height:14px"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg></span>Request Overview</h3>
               <div class="seg" id="rangeSeg"><button class="on" data-r="30">This Month</button><button data-r="90">Last 3 Months</button><button data-r="365">Last Year</button></div>
             </div>
-            <div class="chart-wrap" id="trendWrap" style="height:250px">
-              <svg id="trend" viewBox="0 0 560 250" width="100%" height="250" preserveAspectRatio="none" role="img" aria-label="Request overview"></svg>
+            <div class="chart" id="trendWrap" style="height:236px">
+              <svg id="trend" viewBox="0 0 560 236" width="100%" height="236" role="img" aria-label="Request overview"></svg>
               <div class="tip" id="trendTip" style="display:none"></div>
             </div>
-            <div class="legend" style="margin-top:6px"><span><span class="dot" style="background:var(--primary)"></span>This month</span><span><span class="dot" style="background:var(--text-3);opacity:.5"></span>Last month</span></div>
           </div>
 
           <div class="card">
-            <div class="card-head">
-              <h3><span class="ti" style="background:var(--violet-soft);color:var(--violet)"><svg class="i" viewBox="0 0 24 24" style="width:16px;height:16px"><circle cx="12" cy="12" r="9"/><path d="M12 3v9h9"/></svg></span>Requests by Department</h3>
-            </div>
-            <div class="donut-row">
-              <svg id="donut" width="180" height="180" viewBox="0 0 180 180" role="img" aria-label="Requests by department"></svg>
+            <div class="card-head"><h3><span class="ti" style="background:#efe9ff;color:#8b5cf6"><svg class="i" viewBox="0 0 24 24" style="width:14px;height:14px"><circle cx="12" cy="12" r="9"/><path d="M12 3v9h9"/></svg></span>Requests by Department</h3></div>
+            <div class="donut-wrap">
+              <svg id="donut" width="170" height="170" viewBox="0 0 170 170" role="img" aria-label="Requests by department"></svg>
               <div class="dleg" id="deptLegend"></div>
             </div>
           </div>
 
           <div class="card">
-            <div class="card-head"><h3><span class="ti" style="background:var(--success-soft);color:var(--success)"><svg class="i" viewBox="0 0 24 24" style="width:16px;height:16px"><path d="M3 17l6-6 4 4 8-8"/></svg></span>Recent Activity</h3><a class="link">View All <svg class="i" viewBox="0 0 24 24" style="width:14px;height:14px"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a></div>
+            <div class="card-head"><h3><span class="ti" style="background:var(--green-soft);color:var(--green-d)"><svg class="i" viewBox="0 0 24 24" style="width:14px;height:14px"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg></span>Recent Activity</h3><a class="link">View All <svg class="i" viewBox="0 0 24 24" style="width:13px;height:13px"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a></div>
             <div>
-              <div class="act"><div class="ico" style="background:var(--primary-soft);color:var(--primary)"><svg class="i" viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/></svg></div><div><div class="t">Purchase Request #PR-2025-0342</div><div class="s">submitted by Ali Raza</div></div><div class="time">2 min ago</div></div>
-              <div class="act"><div class="ico" style="background:var(--success-soft);color:var(--success)"><svg class="i" viewBox="0 0 24 24"><path d="M5 12l4.5 4.5L19 7"/></svg></div><div><div class="t">Leave Request #LR-2025-0211</div><div class="s">approved by Sarah Ahmed</div></div><div class="time">5 min ago</div></div>
-              <div class="act"><div class="ico" style="background:var(--warning-soft);color:var(--warning)"><svg class="i" viewBox="0 0 24 24"><path d="M9 14L4 9l5-5M4 9h11a5 5 0 0 1 0 10h-3"/></svg></div><div><div class="t">Material Request #MR-2025-0208</div><div class="s">returned for changes by Ahmed Ali</div></div><div class="time">12 min ago</div></div>
-              <div class="act"><div class="ico" style="background:var(--violet-soft);color:var(--violet)"><svg class="i" viewBox="0 0 24 24"><circle cx="9" cy="20" r="1.5"/><circle cx="18" cy="20" r="1.5"/><path d="M3 4h2l2.5 11h10l2-7H7"/></svg></div><div><div class="t">Purchase Request #PR-2025-0341</div><div class="s">approved by Finance Team</div></div><div class="time">15 min ago</div></div>
+              <div class="act"><div class="ico" style="background:var(--primary-soft);color:var(--primary)"><svg class="i" viewBox="0 0 24 24" style="width:16px;height:16px"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/></svg></div><div><div class="t">Purchase Request #PR-2025-0342</div><div class="s">submitted by Ali Raza</div></div><div class="time">2 min ago</div></div>
+              <div class="act"><div class="ico" style="background:var(--green-soft);color:var(--green-d)"><svg class="i" viewBox="0 0 24 24" style="width:16px;height:16px;stroke-width:2.4"><path d="M5 12l4.5 4.5L19 7"/></svg></div><div><div class="t">Leave Request #LR-2025-0211</div><div class="s">approved by Sarah Ahmed</div></div><div class="time">5 min ago</div></div>
+              <div class="act"><div class="ico" style="background:#ffedd5;color:#ea580c"><svg class="i" viewBox="0 0 24 24" style="width:16px;height:16px"><path d="M9 14L4 9l5-5M4 9h11a5 5 0 0 1 0 10h-3"/></svg></div><div><div class="t">Material Request #MR-2025-0208</div><div class="s">returned for changes by Ahmed Ali</div></div><div class="time">12 min ago</div></div>
+              <div class="act"><div class="ico" style="background:var(--purple-soft);color:var(--purple)"><svg class="i" viewBox="0 0 24 24" style="width:16px;height:16px"><circle cx="9" cy="20" r="1.5"/><circle cx="18" cy="20" r="1.5"/><path d="M3 4h2l2.5 11h10l2-7H7"/></svg></div><div><div class="t">Purchase Request #PR-2025-0341</div><div class="s">approved by Finance Team</div></div><div class="time">15 min ago</div></div>
             </div>
           </div>
         </div>
 
-        <div class="grid-bottom">
+        <div class="row-bot">
           <div class="card">
-            <div class="card-head"><h3><span class="ti" style="background:var(--primary-soft);color:var(--primary)"><svg class="i" viewBox="0 0 24 24" style="width:16px;height:16px"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0M16 4.5a3.5 3.5 0 0 1 0 7M21.5 20a6.5 6.5 0 0 0-3.5-5.7"/></svg></span>Top Departments</h3><a class="link" data-go="reports">View Report <svg class="i" viewBox="0 0 24 24" style="width:14px;height:14px"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a></div>
+            <div class="card-head"><h3><span class="ti" style="background:var(--primary-soft);color:var(--primary)"><svg class="i" viewBox="0 0 24 24" style="width:14px;height:14px"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0M16 4.5a3.5 3.5 0 0 1 0 7M21.5 20a6.5 6.5 0 0 0-3.5-5.7"/></svg></span>Top Departments</h3><a class="link" data-go="reports">View Report <svg class="i" viewBox="0 0 24 24" style="width:13px;height:13px"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a></div>
             <div class="bars" id="bars"></div>
           </div>
 
           <div class="card">
-            <div class="card-head"><h3><span class="ti" style="background:var(--primary-soft);color:var(--primary)"><svg class="i" viewBox="0 0 24 24" style="width:16px;height:16px"><rect x="3" y="3" width="18" height="18" rx="4"/><path d="M8 12l3 3 5-6"/></svg></span>My Tasks</h3><a class="link" data-go="tasks">View All <svg class="i" viewBox="0 0 24 24" style="width:14px;height:14px"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a></div>
+            <div class="card-head"><h3><span class="ti" style="background:var(--primary-soft);color:var(--primary)"><svg class="i" viewBox="0 0 24 24" style="width:14px;height:14px"><rect x="3" y="3" width="18" height="18" rx="4"/><path d="M8 12l3 3 5-6"/></svg></span>My Tasks</h3><a class="link" data-go="tasks">View All <svg class="i" viewBox="0 0 24 24" style="width:13px;height:13px"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a></div>
             <div class="tabs" id="taskTabs"><button class="on">All (5)</button><button>Approvals (3)</button><button>Actions (2)</button></div>
             <div>
-              <div class="task"><div class="chk"><svg class="i" viewBox="0 0 24 24" style="width:12px;height:12px;stroke-width:3"><path d="M5 12l4.5 4.5L19 7"/></svg></div><div style="flex:1"><div class="tt">Approve Purchase Request #PR-2025-0342</div></div><span class="prio p-high">High</span><span class="when">2 min ago</span></div>
-              <div class="task"><div class="chk"></div><div style="flex:1"><div class="tt">Review Leave Request #LR-2025-0211</div></div><span class="prio p-med">Medium</span><span class="when">5 min ago</span></div>
-              <div class="task"><div class="chk"></div><div style="flex:1"><div class="tt">Process Material Request #MR-2025-0208</div></div><span class="prio p-norm">Normal</span><span class="when">10 min ago</span></div>
+              <div class="task"><div class="chk on"><svg class="i" viewBox="0 0 24 24" style="width:11px;height:11px;stroke-width:3"><path d="M5 12l4.5 4.5L19 7"/></svg></div><div class="tt">Approve Purchase Request #PR-2025-0342</div><span class="prio p-high">High</span><span class="when">2 min ago</span></div>
+              <div class="task"><div class="chk"></div><div class="tt">Review Leave Request #LR-2025-0211</div><span class="prio p-med">Medium</span><span class="when">5 min ago</span></div>
+              <div class="task"><div class="chk"></div><div class="tt">Process Material Request #MR-2025-0208</div><span class="prio p-norm">Normal</span><span class="when">10 min ago</span></div>
             </div>
           </div>
 
           <div class="build" data-go="workflows">
-            <svg class="art" viewBox="0 0 180 150" aria-hidden="true">
-              <g fill="none" stroke="#a5b4fc" stroke-width="2" opacity=".8"><path d="M30 40 C 60 40, 60 90, 100 90"/><path d="M100 90 C 120 90, 120 50, 150 50"/></g>
-              <rect x="14" y="22" width="44" height="34" rx="8" fill="#c7d2fe" opacity=".85"/>
-              <rect x="82" y="72" width="44" height="34" rx="8" fill="#818cf8" opacity=".9"/>
-              <rect x="128" y="34" width="40" height="34" rx="8" fill="#4ade80" opacity=".9"/>
-              <path d="M140 52l6 6 10-12" stroke="#fff" stroke-width="3" fill="none"/>
+            <h3>Build Your Own<br>Workflows</h3>
+            <p>Create custom forms and<br>approval flows with ease.</p>
+            <svg class="art" viewBox="0 0 170 150" aria-hidden="true">
+              <g fill="none" stroke="#a5b4fc" stroke-width="2" opacity=".7"><path d="M30 60 C 60 60, 60 100, 90 100"/><path d="M90 100 C 110 100, 110 60, 140 60"/></g>
+              <rect x="10" y="40" width="46" height="36" rx="9" fill="#c7d2fe" opacity=".9"/>
+              <rect x="70" y="84" width="46" height="36" rx="9" fill="#818cf8"/>
+              <rect x="112" y="30" width="42" height="36" rx="9" fill="#34d399"/>
+              <path d="M124 48l6 6 10-12" stroke="#fff" stroke-width="3" fill="none"/>
             </svg>
-            <div>
-              <h3>Build your own workflows</h3>
-              <p>Create custom forms and approval flows.</p>
-            </div>
-            <button class="go" data-go="workflows">Open designer <svg class="i" viewBox="0 0 24 24" style="width:16px;height:16px"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+            <button class="go">Start Now &rarr;</button>
           </div>
         </div>
       </section>
@@ -377,18 +356,8 @@
           <div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn ghost">Export</button><button class="btn" data-go="newRequest">+ New Request</button></div>
         </div>
         <div class="card">
-          <div class="tabs-bar" id="reqTabs">
-            <button class="on">All <span class="n">248</span></button>
-            <button>Pending <span class="n">42</span></button>
-            <button>Approved <span class="n">176</span></button>
-            <button>Rejected <span class="n">30</span></button>
-            <button>Returned <span class="n">12</span></button>
-          </div>
-          <div style="display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap">
-            <div class="search-sm"><svg class="i" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><input placeholder="Search requests" aria-label="Search requests"></div>
-            <button class="pill">All Departments</button>
-            <button class="pill">All Workflows</button>
-            <button class="pill">Last 30 Days</button>
+          <div class="tabs" id="reqTabs">
+            <button class="on">All (248)</button><button>Pending (42)</button><button>Approved (176)</button><button>Rejected (30)</button><button>Returned (12)</button>
           </div>
           <table>
             <thead><tr><th>#</th><th>Title</th><th>Requester</th><th>Department</th><th>Date</th><th>Status</th><th></th></tr></thead>
@@ -402,24 +371,21 @@
       <section class="view" id="view-detail">
         <div class="detail-head">
           <button class="btn ghost" data-go="requests">&larr; Back</button>
-          <div class="spacer"></div>
+          <div style="flex:1"></div>
           <button class="btn ghost">Print</button>
           <button class="btn ghost">Download</button>
           <button class="btn" id="takeAction">Take Action</button>
         </div>
         <div class="detail-grid">
           <div class="card">
-            <div class="detail-head" style="margin-bottom:14px">
-              <div><div class="foot-note">PR-2025-0342</div><h2>Purchase of laptops</h2></div>
+            <div class="detail-head" style="margin-bottom:12px">
+              <div><div style="color:var(--text-3);font-size:12px">PR-2025-0342</div><h2>Purchase of laptops</h2></div>
               <span class="status s-pending">&#9679; Pending approval</span>
             </div>
-            <div class="tabs-bar" id="detailTabs">
-              <button class="on">Details</button>
-              <button>Approval History</button>
-              <button>Attachments <span class="n">2</span></button>
-              <button>Comments</button>
+            <div class="tabs">
+              <button class="on">Details</button><button>Approval History</button><button>Attachments (2)</button><button>Comments</button>
             </div>
-            <div class="kv">
+            <div class="kv" style="margin-top:12px">
               <div>Requester</div><div>Ali Raza, Operations</div>
               <div>Department</div><div>IT</div>
               <div>Request date</div><div>Nov 10, 2025</div>
@@ -432,24 +398,24 @@
           <div class="card">
             <div class="card-head"><h3>Approval Flow</h3></div>
             <div class="flow">
-              <div class="step done"><div class="node">&#10003;</div><div><div style="font-weight:600">Submitted</div><div class="foot-note">Ali Raza, Nov 10, 09:12</div></div></div>
-              <div class="step now"><div class="node">2</div><div><div style="font-weight:600">Department manager</div><div class="foot-note">Pending, due in 2 days</div></div></div>
-              <div class="step"><div class="node">3</div><div><div style="font-weight:600">Finance approval</div><div class="foot-note">Required above PKR 50,000</div></div></div>
-              <div class="step"><div class="node">4</div><div><div style="font-weight:600">Purchase team</div><div class="foot-note">Record supplier and PO</div></div></div>
+              <div class="step done"><div class="node">&#10003;</div><div><div style="font-weight:600">Submitted</div><div style="color:var(--text-3);font-size:12px">Ali Raza, Nov 10, 09:12</div></div></div>
+              <div class="step now"><div class="node">2</div><div><div style="font-weight:600">Department manager</div><div style="color:var(--text-3);font-size:12px">Pending, due in 2 days</div></div></div>
+              <div class="step"><div class="node">3</div><div><div style="font-weight:600">Finance approval</div><div style="color:var(--text-3);font-size:12px">Required above PKR 50,000</div></div></div>
+              <div class="step"><div class="node">4</div><div><div style="font-weight:600">Purchase team</div><div style="color:var(--text-3);font-size:12px">Record supplier and PO</div></div></div>
             </div>
           </div>
         </div>
       </section>
 
       <!-- PLACEHOLDERS for later phases -->
-      <section class="view" id="view-tasks"><div class="card"><h3>Tasks</h3><p class="foot-note">Task list, built in Phase 4.</p></div></section>
-      <section class="view" id="view-workflows"><div class="card"><h3>Workflows</h3><p class="foot-note">Workflow designer, built in Phase 3.</p></div></section>
-      <section class="view" id="view-forms"><div class="card"><h3>Forms</h3><p class="foot-note">Form builder, built in Phase 2.</p></div></section>
-      <section class="view" id="view-reports"><div class="card"><h3>Reports</h3><p class="foot-note">Reports and charts, built in Phase 6.</p></div></section>
-      <section class="view" id="view-documents"><div class="card"><h3>Documents</h3><p class="foot-note">Documents, built in Phase 5.</p></div></section>
-      <section class="view" id="view-employees"><div class="card"><h3>Employees</h3><p class="foot-note">Employee directory, built in Phase 1.</p></div></section>
-      <section class="view" id="view-settings"><div class="card"><h3>Settings</h3><p class="foot-note">Company settings, built in Phase 1.</p></div></section>
-      <section class="view" id="view-newRequest"><div class="card"><h3>New request</h3><p class="foot-note">Dynamic form, built in Phase 2 and Phase 4.</p></div></section>
+      <section class="view" id="view-tasks"><div class="card"><h3>Tasks</h3><p style="color:var(--text-3)">Task list, built in Phase 4.</p></div></section>
+      <section class="view" id="view-workflows"><div class="card"><h3>Workflows</h3><p style="color:var(--text-3)">Workflow designer, built in Phase 3.</p></div></section>
+      <section class="view" id="view-forms"><div class="card"><h3>Forms</h3><p style="color:var(--text-3)">Form builder, built in Phase 2.</p></div></section>
+      <section class="view" id="view-reports"><div class="card"><h3>Reports</h3><p style="color:var(--text-3)">Reports and charts, built in Phase 6.</p></div></section>
+      <section class="view" id="view-documents"><div class="card"><h3>Documents</h3><p style="color:var(--text-3)">Documents, built in Phase 5.</p></div></section>
+      <section class="view" id="view-employees"><div class="card"><h3>Employees</h3><p style="color:var(--text-3)">Employee directory, built in Phase 1.</p></div></section>
+      <section class="view" id="view-settings"><div class="card"><h3>Settings</h3><p style="color:var(--text-3)">Company settings, built in Phase 1.</p></div></section>
+      <section class="view" id="view-newRequest"><div class="card"><h3>New request</h3><p style="color:var(--text-3)">Dynamic form, built in Phase 2 and Phase 4.</p></div></section>
     </div>
   </main>
 </div>
@@ -460,7 +426,6 @@
   const $$ = (s, r = document) => [...r.querySelectorAll(s)];
   const css = (v) => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
 
-  // navigation
   function show(view) {
     $$('.view').forEach(v => v.classList.toggle('active', v.id === 'view-' + view));
     $$('#nav a').forEach(a => a.classList.toggle('active', a.dataset.view === view));
@@ -468,103 +433,97 @@
     if (view === 'dashboard') drawCharts();
   }
   $$('#nav a').forEach(a => a.addEventListener('click', () => show(a.dataset.view)));
-  $$('[data-go]').forEach(el => el.addEventListener('click', () => show(el.dataset.go === 'detail' ? 'detail' : el.dataset.go)));
+  $$('[data-go]').forEach(el => el.addEventListener('click', () => show(el.dataset.go)));
 
-  // theme and direction
   $('#themeBtn').addEventListener('click', () => {
     const dark = document.documentElement.dataset.theme !== 'dark';
     document.documentElement.dataset.theme = dark ? 'dark' : 'light';
     $('#themeLabel').textContent = dark ? 'Light' : 'Dark';
     drawCharts();
   });
-  $('#dirBtn').addEventListener('click', () => {
+  $('#langBtn').addEventListener('click', () => {
     const rtl = document.documentElement.dir !== 'rtl';
     document.documentElement.dir = rtl ? 'rtl' : 'ltr';
     document.documentElement.lang = rtl ? 'ar' : 'en';
-    $('#dirLabel').textContent = rtl ? 'Arabic' : 'English';
+    $('#langLabel').textContent = rtl ? 'Arabic' : 'English';
     drawCharts();
   });
 
-  // sparklines in KPI cards
   function drawSparks() {
     $$('svg.spark').forEach(svg => {
       const pts = svg.dataset.pts.split(',').map(Number);
       const max = Math.max(...pts), min = Math.min(...pts);
-      const W = 110, H = 44, step = W / (pts.length - 1);
-      const coords = pts.map((v, i) => [i * step, H - 4 - ((v - min) / (max - min || 1)) * (H - 10)]);
-      const d = coords.map((c, i) => (i ? 'L' : 'M') + c[0].toFixed(1) + ',' + c[1].toFixed(1)).join(' ');
-      const color = svg.dataset.color;
-      svg.innerHTML = `<defs><linearGradient id="sg${color.slice(1)}" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="${color}" stop-opacity=".35"/><stop offset="1" stop-color="${color}" stop-opacity="0"/></linearGradient></defs>
-        <path d="${d} L${W},${H} L0,${H} Z" fill="url(#sg${color.slice(1)})"/>
-        <path d="${d}" fill="none" stroke="${color}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>`;
+      const W = 100, H = 40, step = W / (pts.length - 1);
+      const c = pts.map((v, i) => [i * step, H - 3 - ((v - min) / (max - min || 1)) * (H - 8)]);
+      const d = c.map((p, i) => (i ? 'L' : 'M') + p[0].toFixed(1) + ',' + p[1].toFixed(1)).join(' ');
+      const col = svg.dataset.color, id = 'sp' + col.slice(1);
+      svg.innerHTML = `<defs><linearGradient id="${id}" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="${col}" stop-opacity=".3"/><stop offset="1" stop-color="${col}" stop-opacity="0"/></linearGradient></defs>
+        <path d="${d} L${W},${H} L0,${H} Z" fill="url(#${id})"/>
+        <path d="${d}" fill="none" stroke="${col}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>`;
     });
   }
 
-  // area chart with hover tooltip
   const series = {
-    30:  { labels: ['W1','W2','W3','W4'], total: [62, 88, 112, 128], prev: [40, 52, 60, 74] },
-    90:  { labels: ['Aug','Sep','Oct','Nov'], total: [180, 210, 196, 248], prev: [140, 160, 172, 190] },
-    365: { labels: ['Q1','Q2','Q3','Q4'], total: [420, 560, 610, 780], prev: [300, 380, 430, 520] }
+    30:  { labels: ['Week 1','Week 2','Week 3','Week 4'], total: [62, 88, 112, 128], prev: [40, 52, 60, 74], ticks: [0, 50, 100, 150] },
+    90:  { labels: ['Aug','Sep','Oct','Nov'], total: [180, 210, 196, 248], prev: [140, 160, 172, 190], ticks: [0, 80, 160, 240] },
+    365: { labels: ['Q1','Q2','Q3','Q4'], total: [420, 560, 610, 780], prev: [300, 380, 430, 520], ticks: [0, 250, 500, 750] }
   };
   let range = 30;
   function drawTrend() {
-    const svg = $('#trend'), tip = $('#trendTip'), W = 560, H = 250, P = { l: 36, r: 16, t: 28, b: 30 };
-    const s = series[range], n = s.total.length, max = Math.max(...s.total) * 1.15;
+    const svg = $('#trend'), tip = $('#trendTip'), W = 560, H = 236, P = { l: 30, r: 18, t: 24, b: 30 };
+    const s = series[range], n = s.total.length, max = s.ticks[s.ticks.length - 1];
     const x = i => P.l + (i * (W - P.l - P.r)) / (n - 1);
     const y = v => H - P.b - (v / max) * (H - P.t - P.b);
     const pts = s.total.map((v, i) => [x(i), y(v)]);
-    const prevPts = s.prev.map((v, i) => [x(i), y(v)]);
+    const prev = s.prev.map((v, i) => [x(i), y(v)]);
     const smooth = p => p.reduce((d, c, i) => {
       if (!i) return `M${c[0]},${c[1]}`;
       const [px, py] = p[i - 1], cx = (px + c[0]) / 2;
       return d + ` C${cx},${py} ${cx},${c[1]} ${c[0]},${c[1]}`;
     }, '');
-    const primary = css('--primary'), muted = css('--text-3'), border = css('--border');
-    const grid = [0, 0.25, 0.5, 0.75, 1].map(f => {
-      const yy = H - P.b - f * (H - P.t - P.b);
-      return `<line x1="${P.l}" x2="${W - P.r}" y1="${yy}" y2="${yy}" stroke="${border}" stroke-dasharray="4 5"/><text x="${P.l - 8}" y="${yy + 4}" text-anchor="end" font-size="11" fill="${muted}">${Math.round(f * max)}</text>`;
+    const primary = css('--primary'), muted = css('--text-3'), border = css('--border'), surface = css('--surface');
+    const grid = s.ticks.map(t => {
+      const yy = y(t);
+      return `<line x1="${P.l}" x2="${W - P.r}" y1="${yy}" y2="${yy}" stroke="${border}"/><text x="${P.l - 8}" y="${yy + 4}" text-anchor="end" font-size="11" fill="${muted}">${t}</text>`;
     }).join('');
     const labels = s.labels.map((l, i) => `<text x="${x(i)}" y="${H - 8}" text-anchor="middle" font-size="11" fill="${muted}">${l}</text>`).join('');
-    const dots = pts.map((p, i) => `<circle class="pt" data-i="${i}" cx="${p[0]}" cy="${p[1]}" r="${i === n - 1 ? 6 : 4}" fill="${css('--surface')}" stroke="${primary}" stroke-width="2.5"/>`).join('');
+    const dots = pts.map((p, i) => `<circle cx="${p[0]}" cy="${p[1]}" r="${i === n - 1 ? 6 : 4}" fill="${surface}" stroke="${primary}" stroke-width="2.5"/>`).join('');
     svg.innerHTML = `
-      <defs><linearGradient id="ga" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="${primary}" stop-opacity=".30"/><stop offset="1" stop-color="${primary}" stop-opacity="0"/></linearGradient></defs>
+      <defs><linearGradient id="ga" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="${primary}" stop-opacity=".28"/><stop offset="1" stop-color="${primary}" stop-opacity="0"/></linearGradient></defs>
       ${grid}${labels}
-      <path d="${smooth(prevPts)}" fill="none" stroke="${muted}" stroke-opacity=".5" stroke-width="2" stroke-dasharray="5 5"/>
+      <path d="${smooth(prev)}" fill="none" stroke="${muted}" stroke-opacity=".45" stroke-width="2" stroke-dasharray="5 5"/>
       <path d="${smooth(pts)} L${pts[n - 1][0]},${H - P.b} L${pts[0][0]},${H - P.b} Z" fill="url(#ga)"/>
       <path d="${smooth(pts)}" fill="none" stroke="${primary}" stroke-width="3" stroke-linecap="round"/>
       ${dots}`;
     const last = pts[n - 1];
     tip.textContent = `${s.total[n - 1]} Requests`;
-    const wrap = svg.parentElement.getBoundingClientRect();
-    const rect = svg.getBoundingClientRect();
+    const wrap = $('#trendWrap').getBoundingClientRect(), rect = svg.getBoundingClientRect();
     tip.style.display = 'block';
     tip.style.left = (rect.left - wrap.left + (last[0] / W) * rect.width) + 'px';
     tip.style.top = (rect.top - wrap.top + (last[1] / H) * rect.height) + 'px';
   }
 
-  // donut
   const depts = [
-    { name: 'Operations', pct: 32, color: '#3b82f6' },
+    { name: 'Operations', pct: 32, color: '#2563eb' },
     { name: 'Finance', pct: 28, color: '#22c55e' },
     { name: 'HR', pct: 22, color: '#f59e0b' },
     { name: 'Others', pct: 18, color: '#8b5cf6' }
   ];
   function drawDonut() {
-    const r = 62, c = 90, circ = 2 * Math.PI * r;
+    const r = 62, c = 85, circ = 2 * Math.PI * r;
     let off = 0;
     const arcs = depts.map(d => {
       const len = (d.pct / 100) * circ;
-      const el = `<circle cx="${c}" cy="${c}" r="${r}" fill="none" stroke="${d.color}" stroke-width="24" stroke-linecap="butt" stroke-dasharray="${len - 2} ${circ - len + 2}" stroke-dashoffset="${-off}" transform="rotate(-90 ${c} ${c})"/>`;
+      const el = `<circle cx="${c}" cy="${c}" r="${r}" fill="none" stroke="${d.color}" stroke-width="22" stroke-dasharray="${len - 1.5} ${circ - len + 1.5}" stroke-dashoffset="${-off}" transform="rotate(-90 ${c} ${c})"/>`;
       off += len; return el;
     }).join('');
     $('#donut').innerHTML = `${arcs}
-      <text x="${c}" y="${c - 2}" text-anchor="middle" font-size="26" font-weight="800" fill="${css('--text')}">248</text>
-      <text x="${c}" y="${c + 18}" text-anchor="middle" font-size="12" fill="${css('--text-3')}">Total</text>`;
+      <text x="${c}" y="${c + 2}" text-anchor="middle" font-size="26" font-weight="800" fill="${css('--text')}">248</text>
+      <text x="${c}" y="${c + 20}" text-anchor="middle" font-size="12" fill="${css('--text-3')}">Total</text>`;
     $('#deptLegend').innerHTML = depts.map(d =>
       `<div><span><span class="dot" style="background:${d.color}"></span>${d.name}</span><strong>${d.pct}%</strong></div>`).join('');
   }
 
-  // bars
   const deptBars = [
     { n: 'Operations', v: 68, c: 'linear-gradient(180deg,#60a5fa,#2563eb)' },
     { n: 'Finance', v: 54, c: 'linear-gradient(180deg,#4ade80,#16a34a)' },
@@ -575,11 +534,7 @@
   function drawBars() {
     const max = Math.max(...deptBars.map(b => b.v));
     $('#bars').innerHTML = deptBars.map(b => `
-      <div class="bar-col">
-        <div class="val">${b.v}</div>
-        <div class="bar" style="height:${(b.v / max) * 150}px;background:${b.c}"></div>
-        <div class="lbl">${b.n}</div>
-      </div>`).join('');
+      <div class="bcol"><div class="v">${b.v}</div><div class="bar" style="height:${(b.v / max) * 130}px;background:${b.c}"></div><div class="l">${b.n}</div></div>`).join('');
   }
 
   function drawCharts() { drawSparks(); drawTrend(); drawDonut(); drawBars(); }
@@ -594,7 +549,6 @@
   }));
   window.addEventListener('resize', drawTrend);
 
-  // requests table
   const requests = [
     ['PR-2025-0342', 'Purchase of laptops', 'Ali Raza', 'IT', 'Nov 10, 2025', 'pending'],
     ['MR-2025-0211', 'Cement bags request', 'Sara Khan', 'Projects', 'Nov 09, 2025', 'approved'],
@@ -605,19 +559,14 @@
   const statusLabel = { pending: 'Pending', approved: 'Approved', rejected: 'Rejected', returned: 'Returned' };
   $('#reqRows').innerHTML = requests.map(r => `
     <tr>
-      <td><strong>${r[0]}</strong></td>
-      <td>${r[1]}</td>
+      <td><strong>${r[0]}</strong></td><td>${r[1]}</td>
       <td><div class="who"><span class="mini">${r[2].split(' ').map(p => p[0]).join('')}</span>${r[2]}</div></td>
-      <td>${r[3]}</td>
-      <td>${r[4]}</td>
+      <td>${r[3]}</td><td>${r[4]}</td>
       <td><span class="status s-${r[5]}">&#9679; ${statusLabel[r[5]]}</span></td>
       <td><a class="link" data-go="detail">View</a></td>
     </tr>`).join('');
   $$('#reqRows [data-go]').forEach(el => el.addEventListener('click', () => show('detail')));
 
-  $$('#detailTabs button').forEach(b => b.addEventListener('click', () => {
-    $$('#detailTabs button').forEach(x => x.classList.toggle('on', x === b));
-  }));
   $('#takeAction').addEventListener('click', () => {
     const t = $('#toast');
     t.textContent = 'Prototype: approve, reject and return actions open here.';
