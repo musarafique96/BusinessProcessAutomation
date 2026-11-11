@@ -74,6 +74,8 @@ Built in the blueprint's order. The first integration (accounting, ERP, HR, or i
 
 The mobile app is built with Flutter, the same framework as the Gharbaar mobile app. Before Phase 8, the responsive web app works in phone browsers.
 
+Push notifications use Firebase Cloud Messaging, the same service Gharbaar uses for push messages. The BPA backend sends each message through Firebase, and each phone's device token is stored in the BPA database. Sending to iPhones needs a paid Apple Developer account.
+
 Also in this phase: full stock management, added to the scope at the owner's request. It extends the Phase 4 balances with multiple stock locations, transfers between them, stock adjustments and stock counts, and reorder rules.
 
 Exit gate: webhooks deliver with retries and signatures; WhatsApp and SMS respect opt-in and template rules; offline actions are idempotent and conflict-safe.
