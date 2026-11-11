@@ -6,13 +6,13 @@ Status: plan agreed for development. Infrastructure is not set up yet. Operation
 
 ## Stage 1: development (now)
 
-One Oracle Cloud Always Free Ampere A1 virtual machine, called `appserver` (planned name; the rename from the old working name isn't done yet). It runs both the BPA and Gharbaar projects.
+One Oracle Cloud Always Free Ampere A1 virtual machine, called `hearth`. It runs both the BPA and Gharbaar projects.
 
 ```
-appserver (Oracle, Always Free Ampere A1)
+hearth (Oracle, Always Free Ampere A1)
 ├── Edge: Caddy (ports 80 and 443)
 │   ├── gharbaar.duckdns.org → Gharbaar API
-│   └── bpaplatform.duckdns.org      → BPA API
+│   └── bpaplatform.duckdns.org → BPA API
 ├── Gharbaar
 │   └── Gharbaar API → Gharbaar PostgreSQL database (name: gharbaar)
 └── BPA
@@ -27,7 +27,7 @@ Gharbaar's notes plan to switch from DuckDNS and Caddy to a Cloudflare Tunnel la
 |---|---|---|
 | `musarafique96/BusinessProcessAutomation` (BPA) | `~/bpa-repo` | BPA API, its database, and its compose file |
 | `musarafique96/household-app` (Gharbaar) | `~/gharbaar-repo` | Gharbaar API, its database, and its compose file |
-| `server-infra` (new, not created yet) | `~/server-infra` | Shared edge and server setup (see below) |
+| `server-infra` | `~/server-infra` | Shared edge and server setup (see below) |
 
 **`server-infra` holds only what all apps depend on:**
 - The shared Caddy configuration, with one entry per public name (`gharbaar.duckdns.org`, `bpaplatform.duckdns.org`).
@@ -68,6 +68,10 @@ Prerequisites on the server: Docker with the Compose plugin, the shared `edge` D
 
 Updates: `git pull`, then step 3 again. Migrations that already ran are skipped.
 
+**Email (optional).** Invitations and password resets are emailed only when `SMTP_HOST` and `SMTP_FROM` are set in `.env` (also `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`). Leave them empty and the admin shares the link by hand. The provider and sending domain are not chosen yet.
+
+**Session revocation.** A password reset gives the account a new security stamp (migration `0006_security_stamp.sql`). Every existing session for that account stops working on its next request.
+
 Backups of the `bpa` database are part of the shared nightly `pg_dump` (not set up yet). Restoring the session-key volume `bpa-keys` is needed too, or everyone is signed out.
 
 ## Stage 2: before the first paying customer
@@ -87,7 +91,6 @@ When the paid server is bought, both the BPA and Gharbaar systems move to it tog
 ## Open items
 
 - Confirm current Oracle Always Free limits before relying on them. They change.
-- Choose Caddy or Nginx for the reverse proxy.
-- Create the DuckDNS subdomains for each application.
+- Shared migration runner: not yet in `server-infra`. BPA and Gharbaar each run their own for now.
 - Create the R2 bucket for backups, one per project.
 - Confirm PostgreSQL 16 packages for ARM64 on the chosen OS image.
