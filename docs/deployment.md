@@ -91,6 +91,6 @@ When the paid server is bought, both the BPA and Gharbaar systems move to it tog
 ## Open items
 
 - Confirm current Oracle Always Free limits before relying on them. They change.
-- Shared migration runner: not yet in `server-infra`. BPA and Gharbaar each run their own for now.
+- BPA still runs its interim `deploy/migrate.sh`. Switch it to the shared runner in `server-infra/migrate` (same `schema_migrations` table, so no baseline is needed).
 - Create the R2 bucket for backups, one per project.
 - Confirm PostgreSQL 16 packages for ARM64 on the chosen OS image.
