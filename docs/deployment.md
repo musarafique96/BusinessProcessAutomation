@@ -61,7 +61,8 @@ Files are in `deploy/`: `Dockerfile` (API image), `docker-compose.yml` (database
 Prerequisites on the server: Docker with the Compose plugin, the `server-infra` repo cloned to `~/server-infra` (it holds the shared migration runner and the `edge` Caddy setup), the shared `edge` Docker network (created by `server-infra`, with a fixed subnet and Caddy at `CADDY_ADDRESS`), and a DuckDNS name for BPA. The compose file reads the runner from `../../server-infra/migrate` by default; set `INFRA_DIR` in `.env` if the clone is elsewhere.
 
 1. Clone the repo to `~/bpa-repo`, then `cd ~/bpa-repo/deploy`.
-2. `cp .env.example .env`, then set `POSTGRES_PASSWORD` and `BPA_APP_LOGIN_PASSWORD` to two different long random values, and `CADDY_ADDRESS` to Caddy's address on `edge`. Keep `.env` out of git.
+2. `cp .env.example .env`, then set `CADDY_ADDRESS` to Caddy's address on `edge`. Keep `.env` out of git.
+2a. Create the two password files, which are not in git. `deploy/secrets/db_password.txt` holds the database superuser password. `deploy/secrets/db_login_password.txt` holds the API login password. Use two different long random values. The file contents must match the passwords already in use on the server. Use `mkdir -p secrets` then write each file with no trailing spaces, and keep them out of git (`deploy/secrets/` is in `.gitignore`).
 3. `docker compose --env-file .env up -d --build`. The `migrate` service runs the shared runner, which applies each migration once (recorded in `schema_migrations`) and exits. The `login-role` service then creates or updates the `bpa_login` role and exits. The `api` service starts after it succeeds.
 4. Caddy in `server-infra` routes `bpaplatform.duckdns.org` to `bpa-api:8080`.
 5. Check: `curl https://bpaplatform.duckdns.org/health` returns `{"status":"ok"}`.
@@ -91,6 +92,6 @@ When the paid server is bought, both the BPA and Gharbaar systems move to it tog
 ## Open items
 
 - Confirm current Oracle Always Free limits before relying on them. They change.
-- Shared migration runner: in use for BPA (`server-infra/migrate`). Gharbaar's switch to it is separate.
+- Shared migration runner: in use for BPA and Gharbaar (`server-infra/migrate`).
 - Create the R2 bucket for backups, one per project.
 - Confirm PostgreSQL 16 packages for ARM64 on the chosen OS image.
