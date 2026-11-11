@@ -1,9 +1,11 @@
 <Solution>
   <Folder Name="/src/">
     <Project Path="src/Bpa.Api/Bpa.Api.csproj" />
+    <Project Path="src/Bpa.Identity/Bpa.Identity.csproj" />
     <Project Path="src/Bpa.Tenancy/Bpa.Tenancy.csproj" />
   </Folder>
   <Folder Name="/tests/">
+    <Project Path="tests/Bpa.Identity.Tests/Bpa.Identity.Tests.csproj" />
     <Project Path="tests/Bpa.Tenancy.Tests/Bpa.Tenancy.Tests.csproj" />
   </Folder>
 </Solution>

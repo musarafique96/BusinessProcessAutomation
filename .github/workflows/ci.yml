@@ -30,11 +30,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Apply migrations
-        run: psql -h localhost -U postgres -d bpa_test -v ON_ERROR_STOP=1 -f db/migrations/0001_tenancy.sql
+      - name: Apply migrations (in order)
+        run: |
+          for f in db/migrations/*.sql; do
+            psql -h localhost -U postgres -d bpa_test -v ON_ERROR_STOP=1 -f "$f" || exit 1
+          done
 
-      - name: Row-level security checks (SQL)
-        run: psql -h localhost -U postgres -d bpa_test -v ON_ERROR_STOP=1 -f tests/sql/rls_checks.sql
+      - name: Tenant isolation checks (SQL)
+        run: |
+          for f in tests/sql/*_checks.sql; do
+            psql -h localhost -U postgres -d bpa_test -v ON_ERROR_STOP=1 -f "$f" || exit 1
+          done
 
       - uses: actions/setup-dotnet@v4
         with:
