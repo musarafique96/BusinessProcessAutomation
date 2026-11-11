@@ -16,7 +16,7 @@ Exit gate: the assumptions register and reference processes are reviewed and acc
 
 ## Phase 1: Platform foundation and security
 
-Modules: 4.1 Platform and tenant management, 4.2 Authentication (email and password, invitations, reset, sessions), 4.3 Organization and workforce, 4.4 Roles, permissions and access scopes (including absence-based substitutes), 4.14 Audit trail (infrastructure), 4.15 Plan data model, 4.18 Administration (settings, calendars, numbering), 4.19 Localization framework.
+Modules: 4.1 Platform and tenant management, 4.2 Authentication (username and password, Gmail sign-in, phone sign-in, invitations, reset, sessions). These are the same sign-in methods Gharbaar uses. Usernames, emails and phone numbers are unique within a company, and a username can't change once created., 4.3 Organization and workforce, 4.4 Roles, permissions and access scopes (including absence-based substitutes), 4.14 Audit trail (infrastructure), 4.15 Plan data model, 4.18 Administration (settings, calendars, numbering), 4.19 Localization framework.
 
 Also built here: tenant isolation through row-level security, the tenant-aware file storage foundation, time-limited support access with audit, the design system and error handling.
 
