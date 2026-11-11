@@ -24,7 +24,7 @@ Gharbaar's notes plan to switch from DuckDNS and Caddy to a Cloudflare Tunnel la
 | Repository | Server folder | Holds |
 |---|---|---|
 | `musarafique96/BusinessProcessAutomation` (BPA) | `~/bpa-repo` | BPA API, its database, and its compose file |
-| Gharbaar repository | `~/gharbaar-repo` | Gharbaar API, its database, and its compose file |
+| `musarafique96/household-app` (Gharbaar) | `~/gharbaar-repo` | Gharbaar API, its database, and its compose file |
 | `server-infra` (new, not created yet) | `~/server-infra` | Shared edge and server setup (see below) |
 
 **`server-infra` holds only what all apps depend on:**
