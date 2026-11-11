@@ -72,6 +72,8 @@ Modules: 4.17 Integrations and API management (versioned APIs, scoped API creden
 
 Built in the blueprint's order. The first integration (accounting, ERP, HR, or inventory) is chosen at the start of this phase.
 
+The mobile app is built with Flutter, the same framework as the Gharbaar mobile app. Before Phase 8, the responsive web app works in phone browsers.
+
 Also in this phase: full stock management, added to the scope at the owner's request. It extends the Phase 4 balances with multiple stock locations, transfers between them, stock adjustments and stock counts, and reorder rules.
 
 Exit gate: webhooks deliver with retries and signatures; WhatsApp and SMS respect opt-in and template rules; offline actions are idempotent and conflict-safe.
