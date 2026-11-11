@@ -19,7 +19,8 @@ services:
       timeout: 5s
       retries: 20
 
-  # Applies migrations in order, once each, then creates the login role the API uses. Exits when done.
+  # Shared migration runner from server-infra (clone it next to this repo's parent folder, as ~/server-infra).
+  # Applies each migration once, in name order, and records it in schema_migrations. Exits when done.
   migrate:
     image: postgres:16
     depends_on:
@@ -30,12 +31,28 @@ services:
       PGDATABASE: bpa
       PGUSER: postgres
       PGPASSWORD: ${POSTGRES_PASSWORD}
-      BPA_APP_LOGIN_PASSWORD: ${BPA_APP_LOGIN_PASSWORD:?set BPA_APP_LOGIN_PASSWORD in .env}
     volumes:
       - ../db/migrations:/migrations:ro
-      - ./migrate.sh:/migrate.sh:ro
+      - ${INFRA_DIR:-../../server-infra}/migrate:/infra:ro
+    command: ["sh", "/infra/migrate.sh"]
+    restart: "no"
+    networks: [internal]
+
+  # Creates or updates the login role the API uses. Runs after the migrations, then exits.
+  login-role:
+    image: postgres:16
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    environment:
+      PGHOST: db
+      PGDATABASE: bpa
+      PGUSER: postgres
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+      BPA_APP_LOGIN_PASSWORD: ${BPA_APP_LOGIN_PASSWORD:?set BPA_APP_LOGIN_PASSWORD in .env}
+    volumes:
       - ./create_login_role.sql:/create_login_role.sql:ro
-    command: ["sh", "/migrate.sh"]
+    command: ["sh", "-c", "psql -v ON_ERROR_STOP=1 -v pw=\"$$BPA_APP_LOGIN_PASSWORD\" -q -f /create_login_role.sql"]
     restart: "no"
     networks: [internal]
 
@@ -45,7 +62,7 @@ services:
       dockerfile: deploy/Dockerfile
     container_name: bpa-api
     depends_on:
-      migrate:
+      login-role:
         condition: service_completed_successfully
     restart: unless-stopped
     environment:
