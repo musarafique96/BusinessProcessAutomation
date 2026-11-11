@@ -43,7 +43,7 @@ Gharbaar's notes plan to switch from DuckDNS and Caddy to a Cloudflare Tunnel la
 - **Network:** PostgreSQL listens only on the internal Docker network. Only the application container can reach it. Only ports 80, 443 and SSH are open to the internet.
 - **Routing and TLS:** Caddy terminates TLS and routes each DuckDNS subdomain to its application, matching the Gharbaar setup.
 - **Secrets:** each project keeps its secrets in a file on the server, outside the repository.
-- **Schema changes:** BPA gets a migration runner that applies migration files in order and records which ones have run. Gharbaar uses the same runner once its schema changes. Container init scripts run only on a fresh volume, so they aren't enough on their own.
+- **Schema changes:** one migration runner, shared by both projects, applies migration files in order and records which ones have run. It lives in the `server-infra` repository, which is created from the Gharbaar chat, along with the server layout handover. Container init scripts run only on a fresh volume, so they aren't enough on their own.
 
 **Backups**
 
