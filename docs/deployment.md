@@ -4,9 +4,22 @@ Status: plan agreed for development. Infrastructure is not set up yet. Operation
 
 ## Stage 1: development (now)
 
-One Oracle Cloud Always Free Ampere A1 virtual machine, shared with the Gharbaar project.
+One Oracle Cloud Always Free Ampere A1 virtual machine, called the shared server. It runs both the BPA and Gharbaar projects.
 
-**Isolation rules, from day one**
+```
+Shared server (Oracle, Always Free Ampere A1)
+├── Edge: Caddy (ports 80 and 443)
+│   ├── gharbaar.duckdns.org → Gharbaar API
+│   └── bpa.duckdns.org      → BPA API
+├── Gharbaar
+│   └── Gharbaar API → Gharbaar PostgreSQL database (name: gharbaar)
+└── BPA
+    └── BPA API → BPA PostgreSQL database (name: bpa)
+```
+
+Gharbaar's notes plan to switch from DuckDNS and Caddy to a Cloudflare Tunnel later. That change affects only the edge. Both projects keep their own API and database.
+
+**Repositories.** Both projects live under the same GitHub account in separate repositories. BPA is `musarafique96/BusinessProcessAutomation`.
 
 **Same approach for both projects.** Each project has its own database, but they're run and backed up the same way.
 
