@@ -7,7 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Bpa.Tenancy\Bpa.Tenancy.csproj" />
+    <ProjectReference Include="..\Bpa.Identity\Bpa.Identity.csproj" />
   </ItemGroup>
 
 </Project>
