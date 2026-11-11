@@ -2,6 +2,8 @@
 
 Status: plan agreed for development. Infrastructure is not set up yet. Operational readiness is Phase 7 (see `phase-plan.md`).
 
+**Decided:** deployment uses Docker Compose, with Caddy handling HTTPS. This is the same method Gharbaar uses.
+
 ## Stage 1: development (now)
 
 One Oracle Cloud Always Free Ampere A1 virtual machine, called the shared server. It runs both the BPA and Gharbaar projects.
