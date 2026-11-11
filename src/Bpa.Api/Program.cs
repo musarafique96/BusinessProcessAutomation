@@ -20,6 +20,7 @@ var passwords = new PasswordService();
 builder.Services.AddSingleton(dataSource);
 builder.Services.AddSingleton(new UserRepository(async () => await dataSource.OpenConnectionAsync(), passwords));
 builder.Services.AddSingleton(new TenantLookup(async () => await dataSource.OpenConnectionAsync()));
+builder.Services.AddSingleton(new InvitationRepository(async () => await dataSource.OpenConnectionAsync(), passwords));
 
 // Cookie sessions. The cookie is HttpOnly and sent only over HTTPS.
 builder.Services
@@ -129,9 +130,126 @@ app.MapGet("/auth/me", (ClaimsPrincipal user) => Results.Ok(new
     tenantId = user.FindFirstValue("tenant_id"),
 })).RequireAuthorization();
 
+// Invite a person by email or username, with a role. The token is returned once. Email delivery
+// isn't set up yet, so the admin shares the link. Needs users.manage.
+app.MapPost("/invitations", async (
+    CreateInvitationRequest request,
+    ClaimsPrincipal user,
+    UserRepository users,
+    InvitationRepository invitations) =>
+{
+    if (!TryGetSession(user, out var tenantId, out var userId))
+    {
+        return Results.Unauthorized();
+    }
+
+    if (!await users.HasPermissionAsync(tenantId, userId, "users.manage"))
+    {
+        return Results.StatusCode(StatusCodes.Status403Forbidden);
+    }
+
+    try
+    {
+        var created = await invitations.CreateAsync(
+            tenantId, userId, request.FullName, request.RoleId, request.Email, request.Username);
+        return Results.Created($"/invitations/{created.Id}", new
+        {
+            id = created.Id,
+            token = created.Token,
+            expiresAt = created.ExpiresAt,
+        });
+    }
+    catch (ArgumentException ex)
+    {
+        return Results.BadRequest(new { error = ex.Message });
+    }
+    catch (PostgresException ex) when (ex.SqlState == "23503")
+    {
+        return Results.BadRequest(new { error = "Role not found in this company." });
+    }
+    catch (PostgresException ex) when (ex.SqlState == "23505")
+    {
+        return Results.Conflict(new { error = "A pending invitation already exists for this email or username." });
+    }
+}).RequireAuthorization();
+
+app.MapPost("/invitations/{id:guid}/revoke", async (
+    Guid id,
+    ClaimsPrincipal user,
+    UserRepository users,
+    InvitationRepository invitations) =>
+{
+    if (!TryGetSession(user, out var tenantId, out var userId))
+    {
+        return Results.Unauthorized();
+    }
+
+    if (!await users.HasPermissionAsync(tenantId, userId, "users.manage"))
+    {
+        return Results.StatusCode(StatusCodes.Status403Forbidden);
+    }
+
+    return await invitations.RevokeAsync(tenantId, id)
+        ? Results.NoContent()
+        : Results.NotFound();
+}).RequireAuthorization();
+
+// Accept an invitation: set a password, which creates the account, then sign in.
+// Unknown company, unknown or used token all return 404. The token is 256 bits, so guessing is not practical.
+app.MapPost("/auth/accept-invitation", async (
+    AcceptInvitationRequest request,
+    HttpContext http,
+    TenantLookup tenants,
+    InvitationRepository invitations) =>
+{
+    var tenantId = await tenants.FindActiveTenantIdAsync(request.Tenant);
+    if (tenantId is null)
+    {
+        return Results.NotFound();
+    }
+
+    try
+    {
+        var userId = await invitations.AcceptAsync(tenantId.Value, request.Token, request.Password);
+        if (userId is null)
+        {
+            return Results.NotFound(new { error = "This invitation is not valid or has expired." });
+        }
+
+        var identity = new ClaimsIdentity(
+            new[]
+            {
+                new Claim(ClaimTypes.NameIdentifier, userId.Value.ToString()),
+                new Claim("tenant_id", tenantId.Value.ToString()),
+            },
+            CookieAuthenticationDefaults.AuthenticationScheme);
+
+        await http.SignInAsync(new ClaimsPrincipal(identity));
+        return Results.NoContent();
+    }
+    catch (ArgumentException ex)
+    {
+        return Results.BadRequest(new { error = ex.Message });
+    }
+    catch (PostgresException ex) when (ex.SqlState == "23505")
+    {
+        return Results.Conflict(new { error = "An account already exists for this email or username." });
+    }
+}).RequireRateLimiting("sign-in");
+
 app.Run();
 
+static bool TryGetSession(ClaimsPrincipal user, out Guid tenantId, out Guid userId)
+{
+    return Guid.TryParse(user.FindFirstValue("tenant_id"), out tenantId)
+        && Guid.TryParse(user.FindFirstValue(ClaimTypes.NameIdentifier), out userId);
+}
+
 public sealed record SignInRequest(string Tenant, string Username, string Password);
+
+public sealed record CreateInvitationRequest(string? Email, string? Username, string FullName, Guid RoleId);
+
+public sealed record AcceptInvitationRequest(string Tenant, string Token, string Password);
 
 // Makes the entry point visible to integration tests added in later phases.
 public partial class Program { }

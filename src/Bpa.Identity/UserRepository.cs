@@ -193,7 +193,7 @@ public sealed class UserRepository(Func<Task<NpgsqlConnection>> openConnection, 
         return passwords.Verify(passwordHash, password) ? userId : null;
     }
 
-    private static string NormalizeUsername(string username)
+    internal static string NormalizeUsername(string username)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(username);
         var normalized = username.Trim().ToLowerInvariant();
@@ -207,7 +207,7 @@ public sealed class UserRepository(Func<Task<NpgsqlConnection>> openConnection, 
         return normalized;
     }
 
-    private static string NormalizeEmail(string email)
+    internal static string NormalizeEmail(string email)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(email);
         var normalized = email.Trim().ToLowerInvariant();
