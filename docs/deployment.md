@@ -19,7 +19,20 @@ Shared server (Oracle, Always Free Ampere A1)
 
 Gharbaar's notes plan to switch from DuckDNS and Caddy to a Cloudflare Tunnel later. That change affects only the edge. Both projects keep their own API and database.
 
-**Repositories.** Both projects live under the same GitHub account in separate repositories. BPA is `musarafique96/BusinessProcessAutomation`.
+**Repositories.** All three repositories live under the same GitHub account. Each one has its own folder on the server.
+
+| Repository | Server folder | Holds |
+|---|---|---|
+| `musarafique96/BusinessProcessAutomation` (BPA) | `~/bpa-repo` | BPA API, its database, and its compose file |
+| Gharbaar repository | `~/gharbaar-repo` | Gharbaar API, its database, and its compose file |
+| `server-infra` (new, not created yet) | `~/server-infra` | Shared edge and server setup (see below) |
+
+**`server-infra` holds only what all apps depend on:**
+- The shared Caddy configuration, with one entry per public name (`gharbaar.duckdns.org`, `bpa.duckdns.org`).
+- The shared Docker network that lets Caddy reach each app's API.
+- Notes on the server setup that every app depends on.
+
+**Each app repository keeps only its own parts:** its API, its database, and its compose file. Each app's compose file joins the shared network, so Caddy can route to its API. No app repository contains Caddy configuration.
 
 **Same approach for both projects.** Each project has its own database, but they're run and backed up the same way.
 
