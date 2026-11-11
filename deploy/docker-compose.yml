@@ -55,8 +55,9 @@ services:
     volumes:
       - bpa-keys:/keys
     networks:
-      - internal
-      - edge
+      internal: {}
+      edge:
+        aliases: [bpa-api]
 
 volumes:
   bpa-db:
