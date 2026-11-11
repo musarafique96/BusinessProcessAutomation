@@ -12,7 +12,7 @@ One Oracle Cloud Always Free Ampere A1 virtual machine, called `appserver` (plan
 appserver (Oracle, Always Free Ampere A1)
 ├── Edge: Caddy (ports 80 and 443)
 │   ├── gharbaar.duckdns.org → Gharbaar API
-│   └── bpa.duckdns.org      → BPA API
+│   └── bpaplatform.duckdns.org      → BPA API
 ├── Gharbaar
 │   └── Gharbaar API → Gharbaar PostgreSQL database (name: gharbaar)
 └── BPA
@@ -30,7 +30,7 @@ Gharbaar's notes plan to switch from DuckDNS and Caddy to a Cloudflare Tunnel la
 | `server-infra` (new, not created yet) | `~/server-infra` | Shared edge and server setup (see below) |
 
 **`server-infra` holds only what all apps depend on:**
-- The shared Caddy configuration, with one entry per public name (`gharbaar.duckdns.org`, `bpa.duckdns.org`).
+- The shared Caddy configuration, with one entry per public name (`gharbaar.duckdns.org`, `bpaplatform.duckdns.org`).
 - The shared Docker network that lets Caddy reach each app's API.
 - Notes on the server setup that every app depends on.
 
@@ -63,8 +63,8 @@ Prerequisites on the server: Docker with the Compose plugin, the shared `edge` D
 1. Clone the repo to `~/bpa-repo`, then `cd ~/bpa-repo/deploy`.
 2. `cp .env.example .env`, then set `POSTGRES_PASSWORD` and `BPA_APP_LOGIN_PASSWORD` to two different long random values, and `CADDY_ADDRESS` to Caddy's address on `edge`. Keep `.env` out of git.
 3. `docker compose --env-file .env up -d --build`. The `migrate` service applies each migration once (recorded in `schema_migrations`), creates or updates the `bpa_login` role, and exits. The `api` service starts after it succeeds.
-4. Caddy in `server-infra` routes `bpa.duckdns.org` to `bpa-api:8080`.
-5. Check: `curl https://bpa.duckdns.org/health` returns `{"status":"ok"}`.
+4. Caddy in `server-infra` routes `bpaplatform.duckdns.org` to `bpa-api:8080`.
+5. Check: `curl https://bpaplatform.duckdns.org/health` returns `{"status":"ok"}`.
 
 Updates: `git pull`, then step 3 again. Migrations that already ran are skipped.
 
