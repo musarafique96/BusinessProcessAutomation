@@ -195,4 +195,23 @@ public class PasswordResetTests
         await Assert.ThrowsAsync<ArgumentException>(() => resets.CompleteAsync(tenantId, reset.Token, "short"));
         Assert.Equal(userId, await resets.CompleteAsync(tenantId, reset.Token, NewPassword));
     }
+
+    [Fact]
+    public async Task Reset_changes_the_security_stamp_so_existing_sessions_stop()
+    {
+        var tenantId = await CreateTenantAsync();
+        var userId = await CreateUsers().CreateUsernameUserAsync(tenantId, UniqueUsername(), "Staff", OldPassword);
+        var adminId = await CreateUsers().CreateUsernameUserAsync(tenantId, UniqueUsername(), "Admin", OldPassword);
+        var users = CreateUsers();
+        var resets = CreateResets();
+
+        var before = await users.GetSecurityStampAsync(tenantId, userId);
+        var reset = await resets.CreateAsync(tenantId, adminId, userId);
+        await resets.CompleteAsync(tenantId, reset.Token, NewPassword);
+        var after = await users.GetSecurityStampAsync(tenantId, userId);
+
+        Assert.NotNull(before);
+        Assert.NotNull(after);
+        Assert.NotEqual(before, after);
+    }
 }

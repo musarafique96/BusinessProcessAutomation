@@ -9,7 +9,7 @@ namespace Bpa.Identity;
 public sealed class AccountExceedsRequesterException()
     : Exception("That account has permissions you don't have, so you can't reset its password.");
 
-public sealed record CreatedPasswordReset(Guid Id, string Token, DateTimeOffset ExpiresAt);
+public sealed record CreatedPasswordReset(Guid Id, string Token, DateTimeOffset ExpiresAt, string? Email);
 
 /// <summary>
 /// Admin-issued password resets. An admin with users.manage creates a one-time link for an account,
@@ -86,8 +86,18 @@ public sealed class PasswordResetRepository(Func<Task<NpgsqlConnection>> openCon
             await insert.ExecuteNonQueryAsync(cancellationToken);
         }
 
+        string? email;
+        await using (var lookup = new NpgsqlCommand(
+            "SELECT email FROM users WHERE id = @user_id",
+            connection,
+            transaction))
+        {
+            lookup.Parameters.AddWithValue("user_id", userId);
+            email = (await lookup.ExecuteScalarAsync(cancellationToken)) as string;
+        }
+
         await transaction.CommitAsync(cancellationToken);
-        return new CreatedPasswordReset(resetId, token, expiresAt);
+        return new CreatedPasswordReset(resetId, token, expiresAt, email);
     }
 
     /// <summary>
@@ -136,7 +146,8 @@ public sealed class PasswordResetRepository(Func<Task<NpgsqlConnection>> openCon
         }
 
         await using (var setPassword = new NpgsqlCommand(
-            "UPDATE users SET password_hash = @password_hash WHERE id = @user_id AND status = 'active'",
+            // A new security stamp signs out every existing session for this account.
+            "UPDATE users SET password_hash = @password_hash, security_stamp = gen_random_uuid() WHERE id = @user_id AND status = 'active'",
             connection,
             transaction))
         {

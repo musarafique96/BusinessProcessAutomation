@@ -2,6 +2,7 @@ using System.Net;
 using System.Security.Claims;
 using System.Threading.RateLimiting;
 using Bpa.Identity;
+using Bpa.Identity.Email;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.DataProtection;
@@ -23,6 +24,12 @@ builder.Services.AddSingleton(new TenantLookup(async () => await dataSource.Open
 builder.Services.AddSingleton(new InvitationRepository(async () => await dataSource.OpenConnectionAsync(), passwords));
 builder.Services.AddSingleton(new PasswordResetRepository(async () => await dataSource.OpenConnectionAsync(), passwords));
 
+// Email goes through SMTP when the Smtp section is set. Otherwise nothing is sent, and admins share links.
+var smtpOptions = builder.Configuration.GetSection("Smtp").Get<SmtpOptions>() ?? new SmtpOptions();
+builder.Services.AddSingleton<IEmailSender>(smtpOptions.IsConfigured
+    ? new SmtpEmailSender(smtpOptions)
+    : new NoEmailSender());
+
 // Cookie sessions. The cookie is HttpOnly and sent only over HTTPS.
 builder.Services
     .AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
@@ -34,6 +41,25 @@ builder.Services
         options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
         options.ExpireTimeSpan = TimeSpan.FromHours(12);
         options.SlidingExpiration = true;
+
+        // Every request checks the session's security stamp. A password reset changes the stamp,
+        // so sessions from before the reset are rejected on their next request.
+        options.Events.OnValidatePrincipal = async context =>
+        {
+            var users = context.HttpContext.RequestServices.GetRequiredService<UserRepository>();
+            var principal = context.Principal;
+            var validUser = Guid.TryParse(principal?.FindFirstValue(ClaimTypes.NameIdentifier), out var userId);
+            var validTenant = Guid.TryParse(principal?.FindFirstValue("tenant_id"), out var tenantId);
+            var validStamp = Guid.TryParse(principal?.FindFirstValue("stamp"), out var stamp);
+
+            if (!validUser || !validTenant || !validStamp
+                || await users.GetSecurityStampAsync(tenantId, userId) != stamp)
+            {
+                context.RejectPrincipal();
+                await context.HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+            }
+        };
+
         // API clients get 401 and 403, not a redirect to a login page.
         options.Events.OnRedirectToLogin = context =>
         {
@@ -106,16 +132,14 @@ app.MapPost("/auth/sign-in", async (SignInRequest request, HttpContext http, Ten
         return Results.Unauthorized();
     }
 
-    var identity = new ClaimsIdentity(
-        new[]
-        {
-            new Claim(ClaimTypes.NameIdentifier, userId.Value.ToString()),
-            new Claim("tenant_id", tenantId.Value.ToString()),
-        },
-        CookieAuthenticationDefaults.AuthenticationScheme);
+    var stamp = await users.GetSecurityStampAsync(tenantId.Value, userId.Value);
+    if (stamp is null)
+    {
+        return Results.Unauthorized();
+    }
 
     // SignInAsync issues a new cookie, so an old session cookie can't be reused after sign-in.
-    await http.SignInAsync(new ClaimsPrincipal(identity));
+    await SignInCookieAsync(http, userId.Value, tenantId.Value, stamp.Value);
     return Results.NoContent();
 }).RequireRateLimiting("sign-in");
 
@@ -131,13 +155,16 @@ app.MapGet("/auth/me", (ClaimsPrincipal user) => Results.Ok(new
     tenantId = user.FindFirstValue("tenant_id"),
 })).RequireAuthorization();
 
-// Invite a person by email or username, with a role. The token is returned once. Email delivery
-// isn't set up yet, so the admin shares the link. Needs users.manage.
+// Invite a person by email or username, with a role. The token is always returned to the admin.
+// When SMTP is configured and an email is given, the invitation is also emailed. Needs users.manage.
 app.MapPost("/invitations", async (
     CreateInvitationRequest request,
     ClaimsPrincipal user,
     UserRepository users,
-    InvitationRepository invitations) =>
+    InvitationRepository invitations,
+    TenantLookup tenants,
+    IEmailSender mailer,
+    ILogger<Program> logger) =>
 {
     if (!TryGetSession(user, out var tenantId, out var userId))
     {
@@ -153,11 +180,24 @@ app.MapPost("/invitations", async (
     {
         var created = await invitations.CreateAsync(
             tenantId, userId, request.FullName, request.RoleId, request.Email, request.Username);
+
+        var emailed = false;
+        if (!string.IsNullOrWhiteSpace(request.Email))
+        {
+            var companyCode = await tenants.GetSlugAsync(tenantId) ?? "";
+            emailed = await TrySendAsync(mailer, logger, request.Email, "Your BPA invitation",
+                $"You have been invited to BPA.\n\n" +
+                $"Company code: {companyCode}\n" +
+                $"Invitation code: {created.Token}\n" +
+                $"The invitation expires on {created.ExpiresAt:yyyy-MM-dd HH:mm} UTC.");
+        }
+
         return Results.Created($"/invitations/{created.Id}", new
         {
             id = created.Id,
             token = created.Token,
             expiresAt = created.ExpiresAt,
+            emailed,
         });
     }
     catch (RoleExceedsInviterException ex)
@@ -205,7 +245,8 @@ app.MapPost("/auth/accept-invitation", async (
     AcceptInvitationRequest request,
     HttpContext http,
     TenantLookup tenants,
-    InvitationRepository invitations) =>
+    InvitationRepository invitations,
+    UserRepository users) =>
 {
     var tenantId = await tenants.FindActiveTenantIdAsync(request.Tenant);
     if (tenantId is null)
@@ -221,15 +262,13 @@ app.MapPost("/auth/accept-invitation", async (
             return Results.NotFound(new { error = "This invitation is not valid or has expired." });
         }
 
-        var identity = new ClaimsIdentity(
-            new[]
-            {
-                new Claim(ClaimTypes.NameIdentifier, userId.Value.ToString()),
-                new Claim("tenant_id", tenantId.Value.ToString()),
-            },
-            CookieAuthenticationDefaults.AuthenticationScheme);
+        var stamp = await users.GetSecurityStampAsync(tenantId.Value, userId.Value);
+        if (stamp is null)
+        {
+            return Results.NotFound(new { error = "This invitation is not valid or has expired." });
+        }
 
-        await http.SignInAsync(new ClaimsPrincipal(identity));
+        await SignInCookieAsync(http, userId.Value, tenantId.Value, stamp.Value);
         return Results.NoContent();
     }
     catch (ArgumentException ex)
@@ -243,12 +282,16 @@ app.MapPost("/auth/accept-invitation", async (
 }).RequireRateLimiting("sign-in");
 
 // Create a one-time password reset link for an account. Needs users.manage, and the account can't hold
-// permissions the admin lacks. Email delivery isn't set up yet, so the admin shares the link.
+// permissions the admin lacks. The link is always returned to the admin. When SMTP is configured and the
+// account has an email, it is also emailed to the account.
 app.MapPost("/users/{id:guid}/password-reset", async (
     Guid id,
     ClaimsPrincipal user,
     UserRepository users,
-    PasswordResetRepository resets) =>
+    PasswordResetRepository resets,
+    TenantLookup tenants,
+    IEmailSender mailer,
+    ILogger<Program> logger) =>
 {
     if (!TryGetSession(user, out var tenantId, out var requesterId))
     {
@@ -263,11 +306,25 @@ app.MapPost("/users/{id:guid}/password-reset", async (
     try
     {
         var created = await resets.CreateAsync(tenantId, requesterId, id);
+
+        var emailed = false;
+        if (created.Email is not null)
+        {
+            var companyCode = await tenants.GetSlugAsync(tenantId) ?? "";
+            emailed = await TrySendAsync(mailer, logger, created.Email, "Reset your BPA password",
+                $"A password reset was requested for your BPA account.\n\n" +
+                $"Company code: {companyCode}\n" +
+                $"Reset code: {created.Token}\n" +
+                $"The reset code expires on {created.ExpiresAt:yyyy-MM-dd HH:mm} UTC.\n\n" +
+                "If you did not ask for this, tell your administrator.");
+        }
+
         return Results.Created($"/users/{id}/password-reset", new
         {
             id = created.Id,
             token = created.Token,
             expiresAt = created.ExpiresAt,
+            emailed,
         });
     }
     catch (AccountExceedsRequesterException ex)
@@ -280,7 +337,8 @@ app.MapPost("/users/{id:guid}/password-reset", async (
     }
 }).RequireAuthorization();
 
-// Set a new password with a reset link. Then the person signs in as usual.
+// Set a new password with a reset link. This signs out every existing session for the account.
+// The person then signs in as usual.
 app.MapPost("/auth/reset-password", async (
     ResetPasswordRequest request,
     TenantLookup tenants,
@@ -312,6 +370,40 @@ static bool TryGetSession(ClaimsPrincipal user, out Guid tenantId, out Guid user
     var tenantOk = Guid.TryParse(user.FindFirstValue("tenant_id"), out tenantId);
     var userOk = Guid.TryParse(user.FindFirstValue(ClaimTypes.NameIdentifier), out userId);
     return tenantOk && userOk;
+}
+
+static Task SignInCookieAsync(HttpContext http, Guid userId, Guid tenantId, Guid stamp)
+{
+    var identity = new ClaimsIdentity(
+        new[]
+        {
+            new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
+            new Claim("tenant_id", tenantId.ToString()),
+            new Claim("stamp", stamp.ToString()),
+        },
+        CookieAuthenticationDefaults.AuthenticationScheme);
+
+    return http.SignInAsync(new ClaimsPrincipal(identity));
+}
+
+// Email is best effort. A failed send is logged, and the admin still has the link in the response.
+static async Task<bool> TrySendAsync(IEmailSender mailer, ILogger logger, string to, string subject, string body)
+{
+    if (!mailer.IsConfigured)
+    {
+        return false;
+    }
+
+    try
+    {
+        await mailer.SendAsync(to, subject, body);
+        return true;
+    }
+    catch (Exception ex)
+    {
+        logger.LogWarning(ex, "Email to a new account or reset could not be sent.");
+        return false;
+    }
 }
 
 public sealed record SignInRequest(string Tenant, string Username, string Password);

@@ -193,6 +193,28 @@ public sealed class UserRepository(Func<Task<NpgsqlConnection>> openConnection, 
         return passwords.Verify(passwordHash, password) ? userId : null;
     }
 
+    /// <summary>
+    /// The account's current security stamp, or null when the account doesn't exist or isn't active.
+    /// Sign-in cookies must carry this value to stay valid.
+    /// </summary>
+    public async Task<Guid?> GetSecurityStampAsync(
+        Guid tenantId,
+        Guid userId,
+        CancellationToken cancellationToken = default)
+    {
+        await using var connection = await openConnection();
+        await using var transaction = await TenantDb.BeginTenantTransactionAsync(connection, tenantId, cancellationToken);
+
+        await using var command = new NpgsqlCommand(
+            "SELECT security_stamp FROM users WHERE id = @user_id AND status = 'active'",
+            connection,
+            transaction);
+        command.Parameters.AddWithValue("user_id", userId);
+
+        var value = await command.ExecuteScalarAsync(cancellationToken);
+        return value is Guid stamp ? stamp : null;
+    }
+
     internal static string NormalizeUsername(string username)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(username);
