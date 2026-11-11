@@ -71,7 +71,7 @@ jobs:
           MIGRATIONS_DIR: db/migrations
           LOGIN_SQL: deploy/create_login_role.sql
         run: |
-          psql -h localhost -U postgres -c "CREATE DATABASE bpa_runner_test"
+          psql -h localhost -U postgres -d postgres -c "CREATE DATABASE bpa_runner_test"
           sh deploy/migrate.sh
           sh deploy/migrate.sh | tee /tmp/second-run.txt
           if grep -q '^apply' /tmp/second-run.txt; then echo "second run applied something"; exit 1; fi
