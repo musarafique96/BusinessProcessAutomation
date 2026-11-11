@@ -6,10 +6,10 @@ Status: plan agreed for development. Infrastructure is not set up yet. Operation
 
 ## Stage 1: development (now)
 
-One Oracle Cloud Always Free Ampere A1 virtual machine, called the shared server. It runs both the BPA and Gharbaar projects.
+One Oracle Cloud Always Free Ampere A1 virtual machine, called `appserver` (planned name; the rename from the old working name isn't done yet). It runs both the BPA and Gharbaar projects.
 
 ```
-Shared server (Oracle, Always Free Ampere A1)
+appserver (Oracle, Always Free Ampere A1)
 ├── Edge: Caddy (ports 80 and 443)
 │   ├── gharbaar.duckdns.org → Gharbaar API
 │   └── bpa.duckdns.org      → BPA API
