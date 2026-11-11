@@ -21,6 +21,7 @@ builder.Services.AddSingleton(dataSource);
 builder.Services.AddSingleton(new UserRepository(async () => await dataSource.OpenConnectionAsync(), passwords));
 builder.Services.AddSingleton(new TenantLookup(async () => await dataSource.OpenConnectionAsync()));
 builder.Services.AddSingleton(new InvitationRepository(async () => await dataSource.OpenConnectionAsync(), passwords));
+builder.Services.AddSingleton(new PasswordResetRepository(async () => await dataSource.OpenConnectionAsync(), passwords));
 
 // Cookie sessions. The cookie is HttpOnly and sent only over HTTPS.
 builder.Services
@@ -159,6 +160,10 @@ app.MapPost("/invitations", async (
             expiresAt = created.ExpiresAt,
         });
     }
+    catch (RoleExceedsInviterException ex)
+    {
+        return Results.Json(new { error = ex.Message }, statusCode: StatusCodes.Status403Forbidden);
+    }
     catch (ArgumentException ex)
     {
         return Results.BadRequest(new { error = ex.Message });
@@ -237,6 +242,69 @@ app.MapPost("/auth/accept-invitation", async (
     }
 }).RequireRateLimiting("sign-in");
 
+// Create a one-time password reset link for an account. Needs users.manage, and the account can't hold
+// permissions the admin lacks. Email delivery isn't set up yet, so the admin shares the link.
+app.MapPost("/users/{id:guid}/password-reset", async (
+    Guid id,
+    ClaimsPrincipal user,
+    UserRepository users,
+    PasswordResetRepository resets) =>
+{
+    if (!TryGetSession(user, out var tenantId, out var requesterId))
+    {
+        return Results.Unauthorized();
+    }
+
+    if (!await users.HasPermissionAsync(tenantId, requesterId, "users.manage"))
+    {
+        return Results.StatusCode(StatusCodes.Status403Forbidden);
+    }
+
+    try
+    {
+        var created = await resets.CreateAsync(tenantId, requesterId, id);
+        return Results.Created($"/users/{id}/password-reset", new
+        {
+            id = created.Id,
+            token = created.Token,
+            expiresAt = created.ExpiresAt,
+        });
+    }
+    catch (AccountExceedsRequesterException ex)
+    {
+        return Results.Json(new { error = ex.Message }, statusCode: StatusCodes.Status403Forbidden);
+    }
+    catch (PostgresException ex) when (ex.SqlState == "23503")
+    {
+        return Results.NotFound(new { error = "Account not found in this company." });
+    }
+}).RequireAuthorization();
+
+// Set a new password with a reset link. Then the person signs in as usual.
+app.MapPost("/auth/reset-password", async (
+    ResetPasswordRequest request,
+    TenantLookup tenants,
+    PasswordResetRepository resets) =>
+{
+    var tenantId = await tenants.FindActiveTenantIdAsync(request.Tenant);
+    if (tenantId is null)
+    {
+        return Results.NotFound();
+    }
+
+    try
+    {
+        var userId = await resets.CompleteAsync(tenantId.Value, request.Token, request.Password);
+        return userId is null
+            ? Results.NotFound(new { error = "This reset link is not valid or has expired." })
+            : Results.NoContent();
+    }
+    catch (ArgumentException ex)
+    {
+        return Results.BadRequest(new { error = ex.Message });
+    }
+}).RequireRateLimiting("sign-in");
+
 app.Run();
 
 static bool TryGetSession(ClaimsPrincipal user, out Guid tenantId, out Guid userId)
@@ -251,6 +319,8 @@ public sealed record SignInRequest(string Tenant, string Username, string Passwo
 public sealed record CreateInvitationRequest(string? Email, string? Username, string FullName, Guid RoleId);
 
 public sealed record AcceptInvitationRequest(string Tenant, string Token, string Password);
+
+public sealed record ResetPasswordRequest(string Tenant, string Token, string Password);
 
 // Makes the entry point visible to integration tests added in later phases.
 public partial class Program { }

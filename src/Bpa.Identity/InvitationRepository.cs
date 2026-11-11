@@ -7,6 +7,10 @@ namespace Bpa.Identity;
 
 public sealed record CreatedInvitation(Guid Id, string Token, DateTimeOffset ExpiresAt);
 
+/// <summary>The role grants a permission the person inviting doesn't hold.</summary>
+public sealed class RoleExceedsInviterException()
+    : Exception("That role grants permissions you don't have, so you can't invite someone with it.");
+
 /// <summary>
 /// Invitations: an admin invites a person by email or username with a role, and the person accepts
 /// by setting a password. The token is shown once, and only its SHA-256 hash is stored.
@@ -38,6 +42,30 @@ public sealed class InvitationRepository(Func<Task<NpgsqlConnection>> openConnec
 
         await using var connection = await openConnection();
         await using var transaction = await TenantDb.BeginTenantTransactionAsync(connection, tenantId, cancellationToken);
+
+        // An inviter can't hand out permissions they don't hold. Checked in the same transaction as the insert.
+        await using (var check = new NpgsqlCommand(
+            """
+            SELECT EXISTS (
+              SELECT 1 FROM role_permissions rp
+              WHERE rp.role_id = @role_id AND rp.tenant_id = @tenant_id
+                AND rp.permission_key NOT IN (
+                  SELECT rp2.permission_key
+                  FROM user_roles ur
+                  JOIN role_permissions rp2 ON rp2.role_id = ur.role_id AND rp2.tenant_id = ur.tenant_id
+                  WHERE ur.user_id = @invited_by AND ur.tenant_id = @tenant_id))
+            """,
+            connection,
+            transaction))
+        {
+            check.Parameters.AddWithValue("role_id", roleId);
+            check.Parameters.AddWithValue("tenant_id", tenantId);
+            check.Parameters.AddWithValue("invited_by", invitedBy);
+            if ((bool)(await check.ExecuteScalarAsync(cancellationToken))!)
+            {
+                throw new RoleExceedsInviterException();
+            }
+        }
 
         await using var command = new NpgsqlCommand(
             """
