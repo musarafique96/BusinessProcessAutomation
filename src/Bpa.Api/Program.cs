@@ -241,8 +241,9 @@ app.Run();
 
 static bool TryGetSession(ClaimsPrincipal user, out Guid tenantId, out Guid userId)
 {
-    return Guid.TryParse(user.FindFirstValue("tenant_id"), out tenantId)
-        && Guid.TryParse(user.FindFirstValue(ClaimTypes.NameIdentifier), out userId);
+    var tenantOk = Guid.TryParse(user.FindFirstValue("tenant_id"), out tenantId);
+    var userOk = Guid.TryParse(user.FindFirstValue(ClaimTypes.NameIdentifier), out userId);
+    return tenantOk && userOk;
 }
 
 public sealed record SignInRequest(string Tenant, string Username, string Password);
