@@ -49,7 +49,9 @@ Before the move, the deployment must have been rehearsed on a scratch server. A 
 
 ## Stage 3: paid server
 
-When the paid server is bought, the BPA deployment moves to it, and Stage 2 applies to Gharbaar too if needed.
+When the paid server is bought, both the BPA and Gharbaar systems move to it together. The Cloudflare Tunnel switch happens at the same time. Each project keeps its own API and database.
+
+**Region note:** the Oracle account's home region is Jeddah. Development and testing from Pakistan, Saudi Arabia and Bahrain run from there. Confirm before buying the paid server whether its region can differ from the home region.
 
 ## Open items
 
