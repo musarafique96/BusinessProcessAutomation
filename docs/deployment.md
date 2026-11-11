@@ -8,20 +8,23 @@ One Oracle Cloud Always Free Ampere A1 virtual machine, shared with the Gharbaar
 
 **Isolation rules, from day one**
 
-- Separate PostgreSQL databases per project (`bpa` and `gharbaar`), each with its own login role. Neither role has rights on the other's database.
-- The BPA application connects as the `bpa_app` role, which has no `BYPASSRLS`, so row-level security applies in production as it does in tests.
-- Each application runs as its own system user with its own environment file. Secrets stay out of the repository.
-- PostgreSQL listens on localhost only. Only ports 80, 443 and SSH are open to the internet.
-- A reverse proxy (Caddy or Nginx) terminates TLS and routes each DuckDNS subdomain to its application.
+**Same approach for both projects.** Each project has its own database, but they're run and backed up the same way.
+
+- **Containers:** each project runs under its own Docker Compose file in its own directory. Each has its own PostgreSQL 16 container and its own data volume, so `docker compose down -v` in one project never touches the other. The BPA application also runs in a container.
+- **Isolation:** separate databases (`bpa` and `gharbaar`), each with its own login role. Neither role has rights on the other's database. The BPA application connects as `bpa_app`, which has no `BYPASSRLS`, so row-level security applies in production as it does in tests.
+- **Network:** PostgreSQL listens only on the internal Docker network. Only the application container can reach it. Only ports 80, 443 and SSH are open to the internet.
+- **Routing and TLS:** Caddy terminates TLS and routes each DuckDNS subdomain to its application, matching the Gharbaar setup.
+- **Secrets:** each project keeps its secrets in a file on the server, outside the repository.
+- **Schema changes:** BPA gets a migration runner that applies migration files in order and records which ones have run. Gharbaar uses the same runner once its schema changes. Container init scripts run only on a fresh volume, so they aren't enough on their own.
 
 **Backups**
 
-- Nightly `pg_dump` per database, written to Oracle Object Storage (free tier), with a retention window.
+- Nightly `pg_dump` per database, using one shared script, sent to Cloudflare R2 for both projects, with a retention window.
 - Restore test once a month into a scratch database. A backup that hasn't been restored doesn't count.
 
 **Failure handling**
 
-- If the VM is reclaimed or fails, both projects stop. Restoring from the Object Storage backups is the recovery path.
+- If the VM is reclaimed or fails, both projects stop. Restoring from the R2 backups is the recovery path.
 
 ## Stage 2: before the first paying customer
 
@@ -40,5 +43,5 @@ When the paid server is bought, the BPA deployment moves to it, and Stage 2 appl
 - Confirm current Oracle Always Free limits before relying on them. They change.
 - Choose Caddy or Nginx for the reverse proxy.
 - Create the DuckDNS subdomains for each application.
-- Create the Object Storage bucket for backups.
+- Create the R2 bucket for backups, one per project.
 - Confirm PostgreSQL 16 packages for ARM64 on the chosen OS image.
