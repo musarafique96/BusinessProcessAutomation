@@ -54,3 +54,24 @@ jobs:
 
       - name: Test
         run: dotnet test Bpa.slnx --no-build --configuration Release --verbosity normal
+
+      - name: Validate deploy compose file
+        run: docker compose -f deploy/docker-compose.yml --env-file deploy/.env.example config -q
+
+      - name: Build API image
+        run: docker build -f deploy/Dockerfile -t bpa-api:ci .
+
+      - name: Migration runner runs twice cleanly
+        env:
+          PGHOST: localhost
+          PGUSER: postgres
+          PGPASSWORD: postgres
+          PGDATABASE: bpa_runner_test
+          BPA_APP_LOGIN_PASSWORD: runner-test-password
+          MIGRATIONS_DIR: db/migrations
+          LOGIN_SQL: deploy/create_login_role.sql
+        run: |
+          psql -h localhost -U postgres -c "CREATE DATABASE bpa_runner_test"
+          sh deploy/migrate.sh
+          sh deploy/migrate.sh | tee /tmp/second-run.txt
+          if grep -q '^apply' /tmp/second-run.txt; then echo "second run applied something"; exit 1; fi

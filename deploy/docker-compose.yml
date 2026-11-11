@@ -1,0 +1,68 @@
+# BPA stack for one server. Run from the deploy folder: docker compose --env-file .env up -d --build
+# Caddy (in the server-infra repository) reaches the API on the shared "edge" network.
+name: bpa
+
+services:
+  db:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: bpa
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+    volumes:
+      - bpa-db:/var/lib/postgresql/data
+    networks: [internal]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d bpa"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  # Applies migrations in order, once each, then creates the login role the API uses. Exits when done.
+  migrate:
+    image: postgres:16
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      PGHOST: db
+      PGDATABASE: bpa
+      PGUSER: postgres
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+      BPA_APP_LOGIN_PASSWORD: ${BPA_APP_LOGIN_PASSWORD:?set BPA_APP_LOGIN_PASSWORD in .env}
+    volumes:
+      - ../db/migrations:/migrations:ro
+      - ./migrate.sh:/migrate.sh:ro
+      - ./create_login_role.sql:/create_login_role.sql:ro
+    command: ["sh", "/migrate.sh"]
+    restart: "no"
+    networks: [internal]
+
+  api:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    container_name: bpa-api
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    restart: unless-stopped
+    environment:
+      ConnectionStrings__BpaApp: Host=db;Port=5432;Database=bpa;Username=bpa_login;Password=${BPA_APP_LOGIN_PASSWORD}
+      # Caddy's fixed address on the edge network. Only requests from here may set the client address.
+      TrustedProxies__0: ${CADDY_ADDRESS:?set CADDY_ADDRESS in .env}
+    volumes:
+      - bpa-keys:/keys
+    networks:
+      - internal
+      - edge
+
+volumes:
+  bpa-db:
+  bpa-keys:
+
+networks:
+  internal:
+  edge:
+    external: true

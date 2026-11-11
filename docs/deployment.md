@@ -54,6 +54,22 @@ Gharbaar's notes plan to switch from DuckDNS and Caddy to a Cloudflare Tunnel la
 
 - If the VM is reclaimed or fails, both projects stop. Restoring from the R2 backups is the recovery path.
 
+### BPA deploy steps (first deploy and each update)
+
+Files are in `deploy/`: `Dockerfile` (API image), `docker-compose.yml` (database, migrations, API), `migrate.sh` (interim migration runner), `create_login_role.sql` (API login role), `.env.example`.
+
+Prerequisites on the server: Docker with the Compose plugin, the shared `edge` Docker network (created by `server-infra`, with a fixed subnet and Caddy at `CADDY_ADDRESS`), and a DuckDNS name for BPA.
+
+1. Clone the repo to `~/bpa-repo`, then `cd ~/bpa-repo/deploy`.
+2. `cp .env.example .env`, then set `POSTGRES_PASSWORD` and `BPA_APP_LOGIN_PASSWORD` to two different long random values, and `CADDY_ADDRESS` to Caddy's address on `edge`. Keep `.env` out of git.
+3. `docker compose --env-file .env up -d --build`. The `migrate` service applies each migration once (recorded in `schema_migrations`), creates or updates the `bpa_login` role, and exits. The `api` service starts after it succeeds.
+4. Caddy in `server-infra` routes `bpa.duckdns.org` to `bpa-api:8080`.
+5. Check: `curl https://bpa.duckdns.org/health` returns `{"status":"ok"}`.
+
+Updates: `git pull`, then step 3 again. Migrations that already ran are skipped.
+
+Backups of the `bpa` database are part of the shared nightly `pg_dump` (not set up yet). Restoring the session-key volume `bpa-keys` is needed too, or everyone is signed out.
+
 ## Stage 2: before the first paying customer
 
 BPA moves to its own server. Gharbaar stays on the shared free server.

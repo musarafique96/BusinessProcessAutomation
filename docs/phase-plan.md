@@ -22,6 +22,13 @@ Also built here: tenant isolation through row-level security, the tenant-aware f
 
 Exit gate: a tenant can be created; users are invited and sign in; roles scope access correctly; the cross-tenant test suite passes for every module built so far.
 
+Deferred items to pick up (decided, not yet built):
+- Email delivery for invitations and password resets. Needs a chosen email provider, a sending domain with DNS records (SPF, DKIM), and a secret key on the server. Until then, admins share the links.
+- Revoke sessions on password reset. Sessions are cookies valid for up to 12 hours, so a reset doesn't sign out an existing login yet. Fix before the first customer.
+- Self-service password reset by email (depends on email delivery above).
+- Gmail sign-in (needs a Google OAuth client ID).
+- Roles and permissions API, then tenant provisioning.
+
 ## Phase 2: Form builder and form runtime
 
 Modules: 4.5 Dynamic form builder.
