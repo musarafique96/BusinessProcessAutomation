@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using Bpa.Identity;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Npgsql;
 
@@ -12,8 +13,8 @@ var dataSource = NpgsqlDataSource.Create(connectionString);
 var passwords = new PasswordService();
 
 builder.Services.AddSingleton(dataSource);
-builder.Services.AddSingleton(new UserRepository(() => dataSource.OpenConnectionAsync(), passwords));
-builder.Services.AddSingleton(new TenantLookup(() => dataSource.OpenConnectionAsync()));
+builder.Services.AddSingleton(new UserRepository(async () => await dataSource.OpenConnectionAsync(), passwords));
+builder.Services.AddSingleton(new TenantLookup(async () => await dataSource.OpenConnectionAsync()));
 
 // Cookie sessions. The cookie is HttpOnly and sent only over HTTPS.
 builder.Services
