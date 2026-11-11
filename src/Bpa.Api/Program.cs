@@ -1,7 +1,11 @@
+using System.Net;
 using System.Security.Claims;
+using System.Threading.RateLimiting;
 using Bpa.Identity;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.AspNetCore.RateLimiting;
 using Npgsql;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -41,8 +45,42 @@ builder.Services
     });
 builder.Services.AddAuthorization();
 
+// Session keys are saved to disk so a restart doesn't sign everyone out.
+// In deployment, point this at a folder on the Docker volume.
+var keysPath = builder.Configuration["DataProtection:KeysPath"] ?? Path.Combine(AppContext.BaseDirectory, "dpkeys");
+builder.Services.AddDataProtection().PersistKeysToFileSystem(new DirectoryInfo(keysPath));
+
+// Caddy sits in front of the API. Client addresses come from X-Forwarded-For only when the
+// request arrives from a trusted proxy (set TrustedProxies in configuration to Caddy's address).
+var trustedProxies = builder.Configuration.GetSection("TrustedProxies").Get<string[]>() ?? ["127.0.0.1", "::1"];
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    options.KnownProxies.Clear();
+    foreach (var proxy in trustedProxies)
+    {
+        options.KnownProxies.Add(IPAddress.Parse(proxy));
+    }
+});
+
+// Sign-in attempts are limited per client address: 10 attempts per 15 minutes.
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.AddPolicy("sign-in", httpContext => RateLimitPartition.GetFixedWindowLimiter(
+        httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+        _ => new FixedWindowRateLimiterOptions
+        {
+            PermitLimit = 10,
+            Window = TimeSpan.FromMinutes(15),
+            QueueLimit = 0,
+        }));
+});
+
 var app = builder.Build();
 
+app.UseForwardedHeaders();
+app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
 
@@ -76,7 +114,7 @@ app.MapPost("/auth/sign-in", async (SignInRequest request, HttpContext http, Ten
     // SignInAsync issues a new cookie, so an old session cookie can't be reused after sign-in.
     await http.SignInAsync(new ClaimsPrincipal(identity));
     return Results.NoContent();
-});
+}).RequireRateLimiting("sign-in");
 
 app.MapPost("/auth/sign-out", async (HttpContext http) =>
 {
