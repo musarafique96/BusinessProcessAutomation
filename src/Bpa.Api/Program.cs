@@ -13,8 +13,16 @@ using Npgsql;
 var builder = WebApplication.CreateBuilder(args);
 
 // The application connects as bpa_app, which has no BYPASSRLS, so row-level security applies.
-var connectionString = builder.Configuration.GetConnectionString("BpaApp")
+// The password comes from the file named by Db:PasswordFile (a Docker secret), not from the connection string.
+var baseConnectionString = builder.Configuration.GetConnectionString("BpaApp")
     ?? throw new InvalidOperationException("ConnectionStrings:BpaApp is not set.");
+var dbPasswordFile = builder.Configuration["Db:PasswordFile"];
+var connectionString = string.IsNullOrWhiteSpace(dbPasswordFile)
+    ? baseConnectionString
+    : new NpgsqlConnectionStringBuilder(baseConnectionString)
+    {
+        Password = File.ReadAllText(dbPasswordFile).Trim()
+    }.ConnectionString;
 var dataSource = NpgsqlDataSource.Create(connectionString);
 var passwords = new PasswordService();
 
@@ -26,6 +34,12 @@ builder.Services.AddSingleton(new PasswordResetRepository(async () => await data
 
 // Email goes through SMTP when the Smtp section is set. Otherwise nothing is sent, and admins share links.
 var smtpOptions = builder.Configuration.GetSection("Smtp").Get<SmtpOptions>() ?? new SmtpOptions();
+// The SMTP password comes from the file named by Smtp:PasswordFile (a Docker secret), when set.
+var smtpPasswordFile = builder.Configuration["Smtp:PasswordFile"];
+if (!string.IsNullOrWhiteSpace(smtpPasswordFile))
+{
+    smtpOptions.Password = File.ReadAllText(smtpPasswordFile).Trim();
+}
 builder.Services.AddSingleton<IEmailSender>(smtpOptions.IsConfigured
     ? new SmtpEmailSender(smtpOptions)
     : new NoEmailSender());
