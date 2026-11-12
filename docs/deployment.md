@@ -62,14 +62,14 @@ Prerequisites on the server: Docker with the Compose plugin, the `server-infra` 
 
 1. Clone the repo to `~/bpa-repo`, then `cd ~/bpa-repo/deploy`.
 2. `cp .env.example .env`, then set `CADDY_ADDRESS` to Caddy's address on `edge`. Keep `.env` out of git.
-2a. Create the two password files, which are not in git. `deploy/secrets/db_password.txt` holds the database superuser password. `deploy/secrets/db_login_password.txt` holds the API login password. Use two different long random values. The file contents must match the passwords already in use on the server. Use `mkdir -p secrets` then write each file with no trailing spaces, and keep them out of git (`deploy/secrets/` is in `.gitignore`).
+2a. Create the two password files, which are not in git. `deploy/secrets/db_password.txt` holds the database superuser password. `deploy/secrets/db_login_password.txt` holds the API login password. Use two different long random values. Also create `deploy/secrets/smtp_password.txt` (empty if email is off). The file contents must match the passwords already in use on the server. Use `mkdir -p secrets` then write each file with no trailing spaces, and keep them out of git (`deploy/secrets/` is in `.gitignore`).
 3. `docker compose --env-file .env up -d --build`. The `migrate` service runs the shared runner, which applies each migration once (recorded in `schema_migrations`) and exits. The `login-role` service then creates or updates the `bpa_login` role and exits. The `api` service starts after it succeeds.
 4. Caddy in `server-infra` routes `bpaplatform.duckdns.org` to `bpa-api:8080`.
 5. Check: `curl https://bpaplatform.duckdns.org/health` returns `{"status":"ok"}`.
 
 Updates: `git pull`, then step 3 again. Migrations that already ran are skipped.
 
-**Email (optional).** Invitations and password resets are emailed only when `SMTP_HOST` and `SMTP_FROM` are set in `.env` (also `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`). Leave them empty and the admin shares the link by hand. The provider and sending domain are not chosen yet.
+**Email (optional).** Invitations and password resets are emailed only when `SMTP_HOST` and `SMTP_FROM` are set in `.env` (also `SMTP_PORT`, `SMTP_USER`). The SMTP password goes in `deploy/secrets/smtp_password.txt`, not in `.env`. Create that file even when email is off; it can be empty. Leave them empty and the admin shares the link by hand. The provider and sending domain are not chosen yet.
 
 **Session revocation.** A password reset gives the account a new security stamp (migration `0006_security_stamp.sql`). Every existing session for that account stops working on its next request.
 

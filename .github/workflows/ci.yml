@@ -66,6 +66,7 @@ jobs:
           mkdir -p deploy/secrets
           echo placeholder > deploy/secrets/db_password.txt
           echo placeholder > deploy/secrets/db_login_password.txt
+          : > deploy/secrets/smtp_password.txt
           docker compose -f deploy/docker-compose.yml --env-file deploy/.env.example config -q
 
       - name: Build API image
