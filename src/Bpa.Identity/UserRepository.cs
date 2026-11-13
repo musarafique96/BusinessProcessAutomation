@@ -194,6 +194,77 @@ public sealed class UserRepository(Func<Task<NpgsqlConnection>> openConnection, 
     }
 
     /// <summary>
+    /// Gmail sign-in for a Google login that Google has already verified. An account that is already linked
+    /// is matched by Google's subject, which never changes. An invited account with the same email is linked
+    /// on first use. Nothing is created here, so only people who were invited can sign in.
+    /// Returns null for an unknown person, an inactive account, or an account linked to another Google login.
+    /// </summary>
+    public async Task<Guid?> SignInWithGoogleAsync(
+        Guid tenantId,
+        string googleSubject,
+        string email,
+        CancellationToken cancellationToken = default)
+    {
+        var normalizedEmail = NormalizeEmail(email);
+
+        await using var connection = await openConnection();
+        await using var transaction = await TenantDb.BeginTenantTransactionAsync(connection, tenantId, cancellationToken);
+
+        await using (var bySubject = new NpgsqlCommand(
+            "SELECT id, status FROM users WHERE google_subject = @subject",
+            connection,
+            transaction))
+        {
+            bySubject.Parameters.AddWithValue("subject", googleSubject);
+            await using var reader = await bySubject.ExecuteReaderAsync(cancellationToken);
+            if (await reader.ReadAsync(cancellationToken))
+            {
+                var linkedId = reader.GetGuid(0);
+                return reader.GetString(1) == "active" ? linkedId : null;
+            }
+        }
+
+        Guid userId;
+        string status;
+        string? linkedSubject;
+        await using (var byEmail = new NpgsqlCommand(
+            "SELECT id, status, google_subject FROM users WHERE email = @email",
+            connection,
+            transaction))
+        {
+            byEmail.Parameters.AddWithValue("email", normalizedEmail);
+            await using var reader = await byEmail.ExecuteReaderAsync(cancellationToken);
+            if (!await reader.ReadAsync(cancellationToken))
+            {
+                return null;
+            }
+
+            userId = reader.GetGuid(0);
+            status = reader.GetString(1);
+            linkedSubject = reader.IsDBNull(2) ? null : reader.GetString(2);
+        }
+
+        if (status != "active" || linkedSubject is not null)
+        {
+            return null;
+        }
+
+        await using var link = new NpgsqlCommand(
+            "UPDATE users SET google_subject = @subject WHERE id = @id AND google_subject IS NULL",
+            connection,
+            transaction);
+        link.Parameters.AddWithValue("subject", googleSubject);
+        link.Parameters.AddWithValue("id", userId);
+        if (await link.ExecuteNonQueryAsync(cancellationToken) != 1)
+        {
+            return null;
+        }
+
+        await transaction.CommitAsync(cancellationToken);
+        return userId;
+    }
+
+    /// <summary>
     /// The account's current security stamp, or null when the account doesn't exist or isn't active.
     /// Sign-in cookies must carry this value to stay valid.
     /// </summary>

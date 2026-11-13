@@ -3,6 +3,7 @@ using System.Security.Claims;
 using System.Threading.RateLimiting;
 using Bpa.Identity;
 using Bpa.Identity.Email;
+using Google.Apis.Auth;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.DataProtection;
@@ -31,6 +32,9 @@ builder.Services.AddSingleton(new UserRepository(async () => await dataSource.Op
 builder.Services.AddSingleton(new TenantLookup(async () => await dataSource.OpenConnectionAsync()));
 builder.Services.AddSingleton(new InvitationRepository(async () => await dataSource.OpenConnectionAsync(), passwords));
 builder.Services.AddSingleton(new PasswordResetRepository(async () => await dataSource.OpenConnectionAsync(), passwords));
+
+// The Web client ID from the BPA Google project. It is public, so it is configuration, not a secret.
+var googleClientId = builder.Configuration["Google:ClientId"] ?? "";
 
 // Email goes through SMTP when the Smtp section is set. Otherwise nothing is sent, and admins share links.
 var smtpOptions = builder.Configuration.GetSection("Smtp").Get<SmtpOptions>() ?? new SmtpOptions();
@@ -153,6 +157,59 @@ app.MapPost("/auth/sign-in", async (SignInRequest request, HttpContext http, Ten
     }
 
     // SignInAsync issues a new cookie, so an old session cookie can't be reused after sign-in.
+    await SignInCookieAsync(http, userId.Value, tenantId.Value, stamp.Value);
+    return Results.NoContent();
+}).RequireRateLimiting("sign-in");
+
+// Gmail sign-in: the app sends a Google ID token. We check Google signed it for this app and the email is verified.
+// The person must already be invited, so Gmail sign-in never creates an account.
+app.MapPost("/auth/google", async (GoogleSignInRequest request, HttpContext http, TenantLookup tenants, UserRepository users) =>
+{
+    if (string.IsNullOrWhiteSpace(googleClientId))
+    {
+        return Results.Problem("Gmail sign-in is not configured.", statusCode: StatusCodes.Status503ServiceUnavailable);
+    }
+
+    if (string.IsNullOrWhiteSpace(request.Tenant) || string.IsNullOrWhiteSpace(request.IdToken))
+    {
+        return Results.Unauthorized();
+    }
+
+    var tenantId = await tenants.FindActiveTenantIdAsync(request.Tenant);
+    if (tenantId is null)
+    {
+        return Results.Unauthorized();
+    }
+
+    GoogleJsonWebSignature.Payload payload;
+    try
+    {
+        payload = await GoogleJsonWebSignature.ValidateAsync(
+            request.IdToken,
+            new GoogleJsonWebSignature.ValidationSettings { Audience = new[] { googleClientId } });
+    }
+    catch (InvalidJwtException)
+    {
+        return Results.Unauthorized();
+    }
+
+    if (!payload.EmailVerified || string.IsNullOrEmpty(payload.Email))
+    {
+        return Results.Unauthorized();
+    }
+
+    var userId = await users.SignInWithGoogleAsync(tenantId.Value, payload.Subject, payload.Email);
+    if (userId is null)
+    {
+        return Results.Unauthorized();
+    }
+
+    var stamp = await users.GetSecurityStampAsync(tenantId.Value, userId.Value);
+    if (stamp is null)
+    {
+        return Results.Unauthorized();
+    }
+
     await SignInCookieAsync(http, userId.Value, tenantId.Value, stamp.Value);
     return Results.NoContent();
 }).RequireRateLimiting("sign-in");
@@ -421,6 +478,8 @@ static async Task<bool> TrySendAsync(IEmailSender mailer, ILogger logger, string
 }
 
 public sealed record SignInRequest(string Tenant, string Username, string Password);
+
+public sealed record GoogleSignInRequest(string? Tenant, string? IdToken);
 
 public sealed record CreateInvitationRequest(string? Email, string? Username, string FullName, Guid RoleId);
 

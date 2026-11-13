@@ -78,6 +78,8 @@ services:
       ConnectionStrings__BpaApp: Host=db;Port=5432;Database=bpa;Username=bpa_login
       Db__PasswordFile: /run/secrets/db_login_password
       Smtp__PasswordFile: /run/secrets/smtp_password
+      # Web client ID of the BPA Google project (public, so it is not a secret).
+      Google__ClientId: 320321599930-ep7r3voang6d55ufmlbk813cu998d9v3.apps.googleusercontent.com
       # Caddy's fixed address on the edge network. Only requests from here may set the client address.
       TrustedProxies__0: ${CADDY_ADDRESS:?set CADDY_ADDRESS in .env}
       # Email is sent only when SMTP_HOST and SMTP_FROM are set. Leave them empty to share links by hand.
