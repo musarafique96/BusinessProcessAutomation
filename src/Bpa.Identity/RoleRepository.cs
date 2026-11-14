@@ -330,7 +330,7 @@ public sealed class RoleRepository(Func<Task<NpgsqlConnection>> openConnection)
         }
 
         await using var command = new NpgsqlCommand(
-            "SELECT code FROM permissions WHERE code = ANY(@codes)", connection, transaction);
+            "SELECT code FROM permissions WHERE code = ANY(@keys)", connection, transaction);
         command.Parameters.AddWithValue("keys", permissions);
         var known = await ReadKeysAsync(command, cancellationToken);
 
