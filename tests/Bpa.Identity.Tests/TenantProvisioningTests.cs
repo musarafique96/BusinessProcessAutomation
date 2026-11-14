@@ -51,8 +51,8 @@ public class TenantProvisioningTests
         foreach (var permission in permissions)
         {
             Assert.True(
-                await users.HasPermissionAsync(tenantId, ownerId.Value, permission.Key),
-                $"Owner is missing {permission.Key}.");
+                await users.HasPermissionAsync(tenantId, ownerId.Value, permission.Code),
+                $"Owner is missing {permission.Code}.");
         }
     }
 

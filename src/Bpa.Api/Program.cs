@@ -487,7 +487,7 @@ app.MapPost("/roles", async (CreateRoleRequest request, ClaimsPrincipal user, Us
     try
     {
         var roleId = await roles.CreateAsync(
-            tenantId, userId, request.Key, request.Name, request.Permissions ?? Array.Empty<string>());
+            tenantId, userId, request.Code, request.Name, request.Permissions ?? Array.Empty<string>());
         return Results.Created($"/roles/{roleId}", new { id = roleId });
     }
     catch (Exception ex) when (IsRoleError(ex))
@@ -627,7 +627,7 @@ app.MapPost("/platform/tenants", async (CreateTenantRequest request, HttpContext
 }).RequireRateLimiting("sign-in");
 
 static bool IsRoleError(Exception ex) =>
-    ex is ArgumentException or UnknownPermissionException or RoleKeyTakenException
+    ex is ArgumentException or UnknownPermissionException or RoleCodeTakenException
         or RoleExceedsRequesterException or AccountRolesExceedRequesterException
         or RoleNotFoundException or UserNotFoundException;
 
@@ -636,7 +636,7 @@ static IResult RoleError(Exception ex) => ex switch
     RoleExceedsRequesterException or AccountRolesExceedRequesterException =>
         Results.StatusCode(StatusCodes.Status403Forbidden),
     RoleNotFoundException or UserNotFoundException => Results.NotFound(new { error = ex.Message }),
-    RoleKeyTakenException => Results.Conflict(new { error = ex.Message }),
+    RoleCodeTakenException => Results.Conflict(new { error = ex.Message }),
     _ => Results.BadRequest(new { error = ex.Message }),
 };
 
@@ -693,7 +693,7 @@ public sealed record AcceptInvitationRequest(string Tenant, string Token, string
 
 public sealed record ResetPasswordRequest(string Tenant, string Token, string Password);
 
-public sealed record CreateRoleRequest(string Key, string Name, string[]? Permissions);
+public sealed record CreateRoleRequest(string Code, string Name, string[]? Permissions);
 
 public sealed record UpdateRoleRequest(string Name, string[]? Permissions);
 

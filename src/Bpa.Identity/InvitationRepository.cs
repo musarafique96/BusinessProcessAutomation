@@ -49,11 +49,11 @@ public sealed class InvitationRepository(Func<Task<NpgsqlConnection>> openConnec
             SELECT EXISTS (
               SELECT 1 FROM role_permissions rp
               WHERE rp.role_id = @role_id AND rp.tenant_id = @tenant_id
-                AND rp.permission_key NOT IN (
-                  SELECT rp2.permission_key
-                  FROM user_roles ur
+                AND rp.permission_code NOT IN (
+                  SELECT rp2.permission_code
+                  FROM role_assignments ur
                   JOIN role_permissions rp2 ON rp2.role_id = ur.role_id AND rp2.tenant_id = ur.tenant_id
-                  WHERE ur.user_id = @invited_by AND ur.tenant_id = @tenant_id))
+                  WHERE ur.user_id = @invited_by AND ur.tenant_id = @tenant_id AND ur.scope_type = 'company' AND ur.starts_at <= now() AND (ur.ends_at IS NULL OR ur.ends_at > now())))
             """,
             connection,
             transaction))
@@ -188,7 +188,7 @@ public sealed class InvitationRepository(Func<Task<NpgsqlConnection>> openConnec
         }
 
         await using (var grantRole = new NpgsqlCommand(
-            "INSERT INTO user_roles (tenant_id, user_id, role_id) VALUES (@tenant_id, @user_id, @role_id)",
+            "INSERT INTO role_assignments (tenant_id, user_id, role_id) VALUES (@tenant_id, @user_id, @role_id)",
             connection,
             transaction))
         {

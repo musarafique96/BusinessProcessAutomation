@@ -58,20 +58,20 @@ public class RoleTests
         await using var transaction = await TenantDb.BeginTenantTransactionAsync(connection, tenantId);
 
         await using (var insert = new NpgsqlCommand(
-            "INSERT INTO roles (id, tenant_id, key, name) VALUES (@id, @tenant_id, @key, 'Test role')",
+            "INSERT INTO roles (id, tenant_id, code, name) VALUES (@id, @tenant_id, @code, 'Test role')",
             connection,
             transaction))
         {
             insert.Parameters.AddWithValue("id", roleId);
             insert.Parameters.AddWithValue("tenant_id", tenantId);
-            insert.Parameters.AddWithValue("key", UniqueKey());
+            insert.Parameters.AddWithValue("code", UniqueKey());
             await insert.ExecuteNonQueryAsync();
         }
 
         foreach (var permission in permissions)
         {
             await using var grant = new NpgsqlCommand(
-                "INSERT INTO role_permissions (tenant_id, role_id, permission_key) VALUES (@tenant_id, @role_id, @permission)",
+                "INSERT INTO role_permissions (tenant_id, role_id, permission_code) VALUES (@tenant_id, @role_id, @permission)",
                 connection,
                 transaction);
             grant.Parameters.AddWithValue("tenant_id", tenantId);
@@ -90,7 +90,7 @@ public class RoleTests
         await using var connection = await OpenAppConnectionAsync();
         await using var transaction = await TenantDb.BeginTenantTransactionAsync(connection, tenantId);
         await using var command = new NpgsqlCommand(
-            "INSERT INTO user_roles (tenant_id, user_id, role_id) VALUES (@tenant_id, @user_id, @role_id)",
+            "INSERT INTO role_assignments (tenant_id, user_id, role_id) VALUES (@tenant_id, @user_id, @role_id)",
             connection,
             transaction);
         command.Parameters.AddWithValue("tenant_id", tenantId);
@@ -124,7 +124,7 @@ public class RoleTests
         var roleId = await repository.CreateAsync(tenantId, manager, key, "Clerk", new[] { "requests.create" });
 
         var created = Assert.Single((await repository.ListRolesAsync(tenantId)).Where(role => role.Id == roleId));
-        Assert.Equal(key, created.Key);
+        Assert.Equal(key, created.Code);
         Assert.Equal(new[] { "requests.create" }, created.Permissions);
     }
 
@@ -188,5 +188,71 @@ public class RoleTests
         var rolesOfB = await repository.ListRolesAsync(companyB);
 
         Assert.DoesNotContain(rolesOfB, role => role.Id == roleId);
+    }
+
+    // Inserts an assignment with a scope and dates, as the owner, to test the rules the API doesn't offer yet.
+    private static async Task InsertAssignmentAsync(
+        Guid tenantId, Guid userId, Guid roleId, string scopeType, DateTime? endsAt = null)
+    {
+        await using var connection = await OpenAppConnectionAsync();
+        await using var transaction = await TenantDb.BeginTenantTransactionAsync(connection, tenantId);
+        await using var command = new NpgsqlCommand(
+            """
+            INSERT INTO role_assignments (tenant_id, user_id, role_id, scope_type, scope_id, starts_at, ends_at)
+            VALUES (@tenant_id, @user_id, @role_id, @scope_type, @scope_id, now() - interval '2 days', @ends_at)
+            """,
+            connection,
+            transaction);
+        command.Parameters.AddWithValue("tenant_id", tenantId);
+        command.Parameters.AddWithValue("user_id", userId);
+        command.Parameters.AddWithValue("role_id", roleId);
+        command.Parameters.AddWithValue("scope_type", scopeType);
+        command.Parameters.AddWithValue("scope_id", scopeType == "company" ? DBNull.Value : Guid.NewGuid());
+        command.Parameters.AddWithValue("ends_at", (object?)endsAt ?? DBNull.Value);
+        await command.ExecuteNonQueryAsync();
+        await transaction.CommitAsync();
+    }
+
+    [Fact]
+    public async Task Scoped_assignment_grants_no_permission_until_scopes_are_built()
+    {
+        var tenantId = await CreateTenantAsync();
+        var userId = await CreatePersonAsync(tenantId);
+        var roleId = await CreateRoleWithAsync(tenantId, "users.manage");
+        await InsertAssignmentAsync(tenantId, userId, roleId, "branch");
+
+        var holds = await CreateUserRepository().HasPermissionAsync(tenantId, userId, "users.manage");
+
+        Assert.False(holds);
+    }
+
+    [Fact]
+    public async Task Ended_assignment_grants_no_permission()
+    {
+        var tenantId = await CreateTenantAsync();
+        var userId = await CreatePersonAsync(tenantId);
+        var roleId = await CreateRoleWithAsync(tenantId, "users.manage");
+        await InsertAssignmentAsync(tenantId, userId, roleId, "company", DateTime.UtcNow.AddDays(-1));
+
+        var holds = await CreateUserRepository().HasPermissionAsync(tenantId, userId, "users.manage");
+
+        Assert.False(holds);
+    }
+
+    [Fact]
+    public async Task Removing_a_role_takes_its_permissions_away()
+    {
+        var tenantId = await CreateTenantAsync();
+        var users = CreateUserRepository();
+        var roles = CreateRepository();
+        var owner = await CreatePersonWithAsync(tenantId, "users.manage", "roles.manage", "requests.create");
+        var person = await CreatePersonAsync(tenantId);
+        var roleId = await roles.CreateAsync(tenantId, owner, UniqueKey(), "Clerk", new[] { "requests.create" });
+
+        await roles.AssignAsync(tenantId, owner, person, roleId);
+        Assert.True(await users.HasPermissionAsync(tenantId, person, "requests.create"));
+
+        await roles.RemoveAsync(tenantId, owner, person, roleId);
+        Assert.False(await users.HasPermissionAsync(tenantId, person, "requests.create"));
     }
 }

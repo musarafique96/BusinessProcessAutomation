@@ -12,7 +12,7 @@ public sealed class RoleExceedsRequesterException()
 public sealed class AccountRolesExceedRequesterException()
     : Exception("That person has permissions you don't have, so you can't change their roles.");
 
-public sealed class RoleKeyTakenException() : Exception("A role with that key already exists in this company.");
+public sealed class RoleCodeTakenException() : Exception("A role with that code already exists in this company.");
 
 public sealed class RoleNotFoundException() : Exception("That role was not found.");
 
@@ -20,9 +20,9 @@ public sealed class UserNotFoundException() : Exception("That person was not fou
 
 public sealed class UnknownPermissionException(string key) : Exception($"Unknown permission: {key}.");
 
-public sealed record PermissionInfo(string Key, string Description);
+public sealed record PermissionInfo(string Code, string Description);
 
-public sealed record RoleInfo(Guid Id, string Key, string Name, IReadOnlyList<string> Permissions);
+public sealed record RoleInfo(Guid Id, string Code, string Name, IReadOnlyList<string> Permissions);
 
 /// <summary>
 /// Roles, the permission catalogue, and who holds which role. Every change is limited to permissions the
@@ -36,7 +36,7 @@ public sealed class RoleRepository(Func<Task<NpgsqlConnection>> openConnection)
     public async Task<IReadOnlyList<PermissionInfo>> GetPermissionsAsync(CancellationToken cancellationToken = default)
     {
         await using var connection = await openConnection();
-        await using var command = new NpgsqlCommand("SELECT key, description FROM permissions ORDER BY key", connection);
+        await using var command = new NpgsqlCommand("SELECT code, description FROM permissions ORDER BY code", connection);
         await using var reader = await command.ExecuteReaderAsync(cancellationToken);
 
         var permissions = new List<PermissionInfo>();
@@ -55,13 +55,13 @@ public sealed class RoleRepository(Func<Task<NpgsqlConnection>> openConnection)
         await using var transaction = await TenantDb.BeginTenantTransactionAsync(connection, tenantId, cancellationToken);
         await using var command = new NpgsqlCommand(
             """
-            SELECT r.id, r.key, r.name,
-                   COALESCE(array_agg(rp.permission_key ORDER BY rp.permission_key)
-                            FILTER (WHERE rp.permission_key IS NOT NULL), '{}')
+            SELECT r.id, r.code, r.name,
+                   COALESCE(array_agg(rp.permission_code ORDER BY rp.permission_code)
+                            FILTER (WHERE rp.permission_code IS NOT NULL), '{}')
             FROM roles r
             LEFT JOIN role_permissions rp ON rp.role_id = r.id AND rp.tenant_id = r.tenant_id
-            GROUP BY r.id, r.key, r.name
-            ORDER BY r.key
+            GROUP BY r.id, r.code, r.name
+            ORDER BY r.code
             """,
             connection,
             transaction);
@@ -84,16 +84,16 @@ public sealed class RoleRepository(Func<Task<NpgsqlConnection>> openConnection)
     public async Task<Guid> CreateAsync(
         Guid tenantId,
         Guid requesterId,
-        string key,
+        string code,
         string name,
         IEnumerable<string> permissionKeys,
         CancellationToken cancellationToken = default)
     {
-        if (!KeyFormat.IsMatch(key))
+        if (!KeyFormat.IsMatch(code))
         {
             throw new ArgumentException(
                 "A role key is 3 to 40 characters: lower case letters, digits and underscores, starting with a letter.",
-                nameof(key));
+                nameof(code));
         }
 
         var roleName = CleanName(name);
@@ -113,23 +113,23 @@ public sealed class RoleRepository(Func<Task<NpgsqlConnection>> openConnection)
         try
         {
             await using var insertRole = new NpgsqlCommand(
-                "INSERT INTO roles (id, tenant_id, key, name) VALUES (@id, @tenant_id, @key, @name)",
+                "INSERT INTO roles (id, tenant_id, code, name) VALUES (@id, @tenant_id, @code, @name)",
                 connection,
                 transaction);
             insertRole.Parameters.AddWithValue("id", roleId);
             insertRole.Parameters.AddWithValue("tenant_id", tenantId);
-            insertRole.Parameters.AddWithValue("key", key);
+            insertRole.Parameters.AddWithValue("code", code);
             insertRole.Parameters.AddWithValue("name", roleName);
             await insertRole.ExecuteNonQueryAsync(cancellationToken);
         }
         catch (PostgresException ex) when (ex.SqlState == PostgresErrorCodes.UniqueViolation)
         {
-            throw new RoleKeyTakenException();
+            throw new RoleCodeTakenException();
         }
 
         await InsertPermissionsAsync(connection, transaction, tenantId, roleId, permissions, cancellationToken);
         await AuditLog.WriteAsync(connection, transaction, tenantId, "user", requesterId, "role.created", "role", roleId.ToString(),
-            null, new { key, name = roleName, permissions }, cancellationToken);
+            null, new { code, name = roleName, permissions }, cancellationToken);
         await transaction.CommitAsync(cancellationToken);
         return roleId;
     }
@@ -244,7 +244,7 @@ public sealed class RoleRepository(Func<Task<NpgsqlConnection>> openConnection)
 
         await using (var assign = new NpgsqlCommand(
             """
-            INSERT INTO user_roles (tenant_id, user_id, role_id)
+            INSERT INTO role_assignments (tenant_id, user_id, role_id)
             VALUES (@tenant_id, @user_id, @role_id)
             ON CONFLICT DO NOTHING
             """,
@@ -293,7 +293,7 @@ public sealed class RoleRepository(Func<Task<NpgsqlConnection>> openConnection)
         }
 
         await using (var remove = new NpgsqlCommand(
-            "DELETE FROM user_roles WHERE user_id = @user_id AND role_id = @role_id",
+            "UPDATE role_assignments SET ends_at = now() WHERE user_id = @user_id AND role_id = @role_id AND ends_at IS NULL",
             connection,
             transaction))
         {
@@ -330,7 +330,7 @@ public sealed class RoleRepository(Func<Task<NpgsqlConnection>> openConnection)
         }
 
         await using var command = new NpgsqlCommand(
-            "SELECT key FROM permissions WHERE key = ANY(@keys)", connection, transaction);
+            "SELECT code FROM permissions WHERE code = ANY(@codes)", connection, transaction);
         command.Parameters.AddWithValue("keys", permissions);
         var known = await ReadKeysAsync(command, cancellationToken);
 
@@ -353,11 +353,12 @@ public sealed class RoleRepository(Func<Task<NpgsqlConnection>> openConnection)
     {
         await using var command = new NpgsqlCommand(
             """
-            SELECT DISTINCT rp.permission_key
-            FROM user_roles ur
+            SELECT DISTINCT rp.permission_code
+            FROM role_assignments ur
             JOIN role_permissions rp ON rp.role_id = ur.role_id AND rp.tenant_id = ur.tenant_id
             JOIN users u ON u.id = ur.user_id AND u.tenant_id = ur.tenant_id
             WHERE ur.user_id = @user_id AND ur.tenant_id = @tenant_id AND u.status = 'active'
+              AND ur.scope_type = 'company' AND ur.starts_at <= now() AND (ur.ends_at IS NULL OR ur.ends_at > now())
             """,
             connection,
             transaction);
@@ -376,10 +377,11 @@ public sealed class RoleRepository(Func<Task<NpgsqlConnection>> openConnection)
     {
         await using var command = new NpgsqlCommand(
             """
-            SELECT DISTINCT rp.permission_key
-            FROM user_roles ur
+            SELECT DISTINCT rp.permission_code
+            FROM role_assignments ur
             JOIN role_permissions rp ON rp.role_id = ur.role_id AND rp.tenant_id = ur.tenant_id
             WHERE ur.user_id = @user_id AND ur.tenant_id = @tenant_id
+              AND (ur.ends_at IS NULL OR ur.ends_at > now())
             """,
             connection,
             transaction);
@@ -406,7 +408,7 @@ public sealed class RoleRepository(Func<Task<NpgsqlConnection>> openConnection)
         }
 
         await using var command = new NpgsqlCommand(
-            "SELECT permission_key FROM role_permissions WHERE role_id = @id", connection, transaction);
+            "SELECT permission_code FROM role_permissions WHERE role_id = @id", connection, transaction);
         command.Parameters.AddWithValue("id", roleId);
         return await ReadKeysAsync(command, cancellationToken);
     }
@@ -434,7 +436,7 @@ public sealed class RoleRepository(Func<Task<NpgsqlConnection>> openConnection)
         foreach (var permission in permissions)
         {
             await using var insert = new NpgsqlCommand(
-                "INSERT INTO role_permissions (tenant_id, role_id, permission_key) VALUES (@tenant_id, @role_id, @permission)",
+                "INSERT INTO role_permissions (tenant_id, role_id, permission_code) VALUES (@tenant_id, @role_id, @permission)",
                 connection,
                 transaction);
             insert.Parameters.AddWithValue("tenant_id", tenantId);

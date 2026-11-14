@@ -54,20 +54,20 @@ public class PasswordResetTests
         await using var transaction = await TenantDb.BeginTenantTransactionAsync(connection, tenantId);
 
         await using (var command = new NpgsqlCommand(
-            "INSERT INTO roles (id, tenant_id, key, name) VALUES (@id, @tenant_id, @key, 'Role')",
+            "INSERT INTO roles (id, tenant_id, code, name) VALUES (@id, @tenant_id, @code, 'Role')",
             connection,
             transaction))
         {
             command.Parameters.AddWithValue("id", roleId);
             command.Parameters.AddWithValue("tenant_id", tenantId);
-            command.Parameters.AddWithValue("key", $"role{roleId:N}");
+            command.Parameters.AddWithValue("code", $"role{roleId:N}");
             await command.ExecuteNonQueryAsync();
         }
 
         foreach (var permission in permissions)
         {
             await using var grant = new NpgsqlCommand(
-                "INSERT INTO role_permissions (tenant_id, role_id, permission_key) VALUES (@tenant_id, @role_id, @permission)",
+                "INSERT INTO role_permissions (tenant_id, role_id, permission_code) VALUES (@tenant_id, @role_id, @permission)",
                 connection,
                 transaction);
             grant.Parameters.AddWithValue("tenant_id", tenantId);
@@ -85,7 +85,7 @@ public class PasswordResetTests
         await using var connection = await OpenAppConnectionAsync();
         await using var transaction = await TenantDb.BeginTenantTransactionAsync(connection, tenantId);
         await using var command = new NpgsqlCommand(
-            "INSERT INTO user_roles (tenant_id, user_id, role_id) VALUES (@tenant_id, @user_id, @role_id)",
+            "INSERT INTO role_assignments (tenant_id, user_id, role_id) VALUES (@tenant_id, @user_id, @role_id)",
             connection,
             transaction);
         command.Parameters.AddWithValue("tenant_id", tenantId);

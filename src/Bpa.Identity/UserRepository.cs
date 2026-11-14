@@ -97,17 +97,18 @@ public sealed class UserRepository(Func<Task<NpgsqlConnection>> openConnection, 
             """
             SELECT EXISTS (
               SELECT 1
-              FROM user_roles ur
+              FROM role_assignments ur
               JOIN role_permissions rp ON rp.role_id = ur.role_id AND rp.tenant_id = ur.tenant_id
               JOIN users u ON u.id = ur.user_id AND u.tenant_id = ur.tenant_id
               WHERE ur.user_id = @user_id
-                AND rp.permission_key = @permission_key
+                AND rp.permission_code = @permission_code
+                AND ur.scope_type = 'company' AND ur.starts_at <= now() AND (ur.ends_at IS NULL OR ur.ends_at > now())
                 AND u.status = 'active')
             """,
             connection,
             transaction);
         command.Parameters.AddWithValue("user_id", userId);
-        command.Parameters.AddWithValue("permission_key", permissionKey);
+        command.Parameters.AddWithValue("permission_code", permissionKey);
 
         return (bool)(await command.ExecuteScalarAsync(cancellationToken))!;
     }

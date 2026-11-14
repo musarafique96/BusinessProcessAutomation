@@ -53,16 +53,16 @@ public class UserRepositoryTests
         await connection.OpenAsync();
 
         await using (var role = new NpgsqlCommand(
-            "INSERT INTO roles (id, tenant_id, key, name) VALUES (@id, @tenant, @key, 'Test role')", connection))
+            "INSERT INTO roles (id, tenant_id, code, name) VALUES (@id, @tenant, @code, 'Test role')", connection))
         {
             role.Parameters.AddWithValue("id", roleId);
             role.Parameters.AddWithValue("tenant", tenantId);
-            role.Parameters.AddWithValue("key", $"role-{roleId:N}");
+            role.Parameters.AddWithValue("code", $"role-{roleId:N}");
             await role.ExecuteNonQueryAsync();
         }
 
         await using (var permission = new NpgsqlCommand(
-            "INSERT INTO role_permissions (tenant_id, role_id, permission_key) VALUES (@tenant, @role, @permission)", connection))
+            "INSERT INTO role_permissions (tenant_id, role_id, permission_code) VALUES (@tenant, @role, @permission)", connection))
         {
             permission.Parameters.AddWithValue("tenant", tenantId);
             permission.Parameters.AddWithValue("role", roleId);
@@ -71,7 +71,7 @@ public class UserRepositoryTests
         }
 
         await using var assignment = new NpgsqlCommand(
-            "INSERT INTO user_roles (tenant_id, user_id, role_id) VALUES (@tenant, @user, @role)", connection);
+            "INSERT INTO role_assignments (tenant_id, user_id, role_id) VALUES (@tenant, @user, @role)", connection);
         assignment.Parameters.AddWithValue("tenant", tenantId);
         assignment.Parameters.AddWithValue("user", userId);
         assignment.Parameters.AddWithValue("role", roleId);

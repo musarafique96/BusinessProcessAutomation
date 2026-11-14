@@ -39,14 +39,15 @@ public sealed class PasswordResetRepository(Func<Task<NpgsqlConnection>> openCon
         await using (var check = new NpgsqlCommand(
             """
             SELECT EXISTS (
-              SELECT 1 FROM user_roles ur
+              SELECT 1 FROM role_assignments ur
               JOIN role_permissions rp ON rp.role_id = ur.role_id AND rp.tenant_id = ur.tenant_id
               WHERE ur.user_id = @user_id AND ur.tenant_id = @tenant_id
-                AND rp.permission_key NOT IN (
-                  SELECT rp2.permission_key
-                  FROM user_roles mine
+                AND (ur.ends_at IS NULL OR ur.ends_at > now())
+                AND rp.permission_code NOT IN (
+                  SELECT rp2.permission_code
+                  FROM role_assignments mine
                   JOIN role_permissions rp2 ON rp2.role_id = mine.role_id AND rp2.tenant_id = mine.tenant_id
-                  WHERE mine.user_id = @requested_by AND mine.tenant_id = @tenant_id))
+                  WHERE mine.user_id = @requested_by AND mine.tenant_id = @tenant_id AND mine.scope_type = 'company' AND mine.starts_at <= now() AND (mine.ends_at IS NULL OR mine.ends_at > now())))
             """,
             connection,
             transaction))

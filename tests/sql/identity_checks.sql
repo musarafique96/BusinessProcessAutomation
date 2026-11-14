@@ -10,7 +10,7 @@ INSERT INTO tenants (id, name, slug) VALUES
   ('d0000000-0000-0000-0000-00000000000d', 'Identity D', 'identity-d')
 ON CONFLICT (id) DO NOTHING;
 
-DELETE FROM user_roles WHERE tenant_id IN ('c0000000-0000-0000-0000-00000000000c', 'd0000000-0000-0000-0000-00000000000d');
+DELETE FROM role_assignments WHERE tenant_id IN ('c0000000-0000-0000-0000-00000000000c', 'd0000000-0000-0000-0000-00000000000d');
 DELETE FROM role_permissions WHERE tenant_id IN ('c0000000-0000-0000-0000-00000000000c', 'd0000000-0000-0000-0000-00000000000d');
 DELETE FROM roles WHERE tenant_id IN ('c0000000-0000-0000-0000-00000000000c', 'd0000000-0000-0000-0000-00000000000d');
 DELETE FROM users WHERE tenant_id IN ('c0000000-0000-0000-0000-00000000000c', 'd0000000-0000-0000-0000-00000000000d');
@@ -20,14 +20,14 @@ INSERT INTO users (id, tenant_id, email, full_name, status) VALUES
   ('c1000000-0000-0000-0000-000000000001', 'c0000000-0000-0000-0000-00000000000c', 'shared@example.test', 'C User', 'active'),
   ('d1000000-0000-0000-0000-000000000001', 'd0000000-0000-0000-0000-00000000000d', 'shared@example.test', 'D User', 'active');
 
-INSERT INTO roles (id, tenant_id, key, name) VALUES
+INSERT INTO roles (id, tenant_id, code, name) VALUES
   ('c2000000-0000-0000-0000-000000000001', 'c0000000-0000-0000-0000-00000000000c', 'admin', 'Admin'),
   ('d2000000-0000-0000-0000-000000000001', 'd0000000-0000-0000-0000-00000000000d', 'admin', 'Admin');
 
-INSERT INTO role_permissions (tenant_id, role_id, permission_key) VALUES
+INSERT INTO role_permissions (tenant_id, role_id, permission_code) VALUES
   ('c0000000-0000-0000-0000-00000000000c', 'c2000000-0000-0000-0000-000000000001', 'users.manage');
 
-INSERT INTO user_roles (tenant_id, user_id, role_id) VALUES
+INSERT INTO role_assignments (tenant_id, user_id, role_id) VALUES
   ('c0000000-0000-0000-0000-00000000000c', 'c1000000-0000-0000-0000-000000000001', 'c2000000-0000-0000-0000-000000000001');
 
 SET ROLE bpa_app;
@@ -52,7 +52,7 @@ DECLARE
 BEGIN
   PERFORM set_config('app.tenant_id', 'c0000000-0000-0000-0000-00000000000c', true);
   BEGIN
-    INSERT INTO user_roles (tenant_id, user_id, role_id) VALUES
+    INSERT INTO role_assignments (tenant_id, user_id, role_id) VALUES
       ('c0000000-0000-0000-0000-00000000000c', 'c1000000-0000-0000-0000-000000000001', 'd2000000-0000-0000-0000-000000000001');
   EXCEPTION WHEN foreign_key_violation OR insufficient_privilege THEN
     blocked := true;
@@ -108,11 +108,11 @@ BEGIN
   PERFORM set_config('app.tenant_id', 'c0000000-0000-0000-0000-00000000000c', true);
   SELECT EXISTS (
     SELECT 1
-    FROM user_roles ur
+    FROM role_assignments ur
     JOIN role_permissions rp ON rp.role_id = ur.role_id AND rp.tenant_id = ur.tenant_id
     JOIN users u ON u.id = ur.user_id AND u.tenant_id = ur.tenant_id
     WHERE ur.user_id = 'c1000000-0000-0000-0000-000000000001'
-      AND rp.permission_key = 'users.manage'
+      AND rp.permission_code = 'users.manage'
       AND u.status = 'active'
   ) INTO granted;
   IF NOT granted THEN

@@ -73,7 +73,7 @@ public sealed class TenantProvisioningRepository(Func<Task<NpgsqlConnection>> op
         }
 
         await using (var role = new NpgsqlCommand(
-            "INSERT INTO roles (id, tenant_id, key, name) VALUES (@id, @tenant_id, 'owner', 'Owner')",
+            "INSERT INTO roles (id, tenant_id, code, name) VALUES (@id, @tenant_id, 'owner', 'Owner')",
             connection,
             transaction))
         {
@@ -85,8 +85,8 @@ public sealed class TenantProvisioningRepository(Func<Task<NpgsqlConnection>> op
         // Copies the whole permission catalogue into the Owner role, so the owner holds every permission.
         await using (var grant = new NpgsqlCommand(
             """
-            INSERT INTO role_permissions (tenant_id, role_id, permission_key)
-            SELECT @tenant_id, @role_id, key FROM permissions
+            INSERT INTO role_permissions (tenant_id, role_id, permission_code)
+            SELECT @tenant_id, @role_id, code FROM permissions
             """,
             connection,
             transaction))
@@ -113,7 +113,7 @@ public sealed class TenantProvisioningRepository(Func<Task<NpgsqlConnection>> op
         }
 
         await using (var link = new NpgsqlCommand(
-            "INSERT INTO user_roles (tenant_id, user_id, role_id) VALUES (@tenant_id, @user_id, @role_id)",
+            "INSERT INTO role_assignments (tenant_id, user_id, role_id) VALUES (@tenant_id, @user_id, @role_id)",
             connection,
             transaction))
         {
