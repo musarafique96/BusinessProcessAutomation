@@ -32,6 +32,7 @@ builder.Services.AddSingleton(new UserRepository(async () => await dataSource.Op
 builder.Services.AddSingleton(new TenantLookup(async () => await dataSource.OpenConnectionAsync()));
 builder.Services.AddSingleton(new InvitationRepository(async () => await dataSource.OpenConnectionAsync(), passwords));
 builder.Services.AddSingleton(new PasswordResetRepository(async () => await dataSource.OpenConnectionAsync(), passwords));
+builder.Services.AddSingleton(new RoleRepository(async () => await dataSource.OpenConnectionAsync()));
 
 // The Web client ID from the BPA Google project. It is public, so it is configuration, not a secret.
 var googleClientId = builder.Configuration["Google:ClientId"] ?? "";
@@ -434,6 +435,167 @@ app.MapPost("/auth/reset-password", async (
     }
 }).RequireRateLimiting("sign-in");
 
+// Roles and permissions. The permission list is fixed. Every change is limited to permissions the requester holds.
+app.MapGet("/permissions", async (ClaimsPrincipal user, RoleRepository roles) =>
+{
+    if (!TryGetSession(user, out _, out _))
+    {
+        return Results.Unauthorized();
+    }
+
+    return Results.Ok(await roles.GetPermissionsAsync());
+}).RequireAuthorization();
+
+// Needs roles.manage or users.manage, since both need to see the roles they hand out.
+app.MapGet("/roles", async (ClaimsPrincipal user, UserRepository users, RoleRepository roles) =>
+{
+    if (!TryGetSession(user, out var tenantId, out var userId))
+    {
+        return Results.Unauthorized();
+    }
+
+    var canSee = await users.HasPermissionAsync(tenantId, userId, "roles.manage")
+        || await users.HasPermissionAsync(tenantId, userId, "users.manage");
+    if (!canSee)
+    {
+        return Results.StatusCode(StatusCodes.Status403Forbidden);
+    }
+
+    return Results.Ok(await roles.ListRolesAsync(tenantId));
+}).RequireAuthorization();
+
+app.MapPost("/roles", async (CreateRoleRequest request, ClaimsPrincipal user, UserRepository users, RoleRepository roles) =>
+{
+    if (!TryGetSession(user, out var tenantId, out var userId))
+    {
+        return Results.Unauthorized();
+    }
+
+    if (!await users.HasPermissionAsync(tenantId, userId, "roles.manage"))
+    {
+        return Results.StatusCode(StatusCodes.Status403Forbidden);
+    }
+
+    try
+    {
+        var roleId = await roles.CreateAsync(
+            tenantId, userId, request.Key, request.Name, request.Permissions ?? Array.Empty<string>());
+        return Results.Created($"/roles/{roleId}", new { id = roleId });
+    }
+    catch (Exception ex) when (IsRoleError(ex))
+    {
+        return RoleError(ex);
+    }
+}).RequireAuthorization();
+
+app.MapPut("/roles/{id:guid}", async (Guid id, UpdateRoleRequest request, ClaimsPrincipal user, UserRepository users, RoleRepository roles) =>
+{
+    if (!TryGetSession(user, out var tenantId, out var userId))
+    {
+        return Results.Unauthorized();
+    }
+
+    if (!await users.HasPermissionAsync(tenantId, userId, "roles.manage"))
+    {
+        return Results.StatusCode(StatusCodes.Status403Forbidden);
+    }
+
+    try
+    {
+        await roles.UpdateAsync(
+            tenantId, userId, id, request.Name, request.Permissions ?? Array.Empty<string>());
+        return Results.NoContent();
+    }
+    catch (Exception ex) when (IsRoleError(ex))
+    {
+        return RoleError(ex);
+    }
+}).RequireAuthorization();
+
+app.MapDelete("/roles/{id:guid}", async (Guid id, ClaimsPrincipal user, UserRepository users, RoleRepository roles) =>
+{
+    if (!TryGetSession(user, out var tenantId, out var userId))
+    {
+        return Results.Unauthorized();
+    }
+
+    if (!await users.HasPermissionAsync(tenantId, userId, "roles.manage"))
+    {
+        return Results.StatusCode(StatusCodes.Status403Forbidden);
+    }
+
+    try
+    {
+        await roles.DeleteAsync(tenantId, userId, id);
+        return Results.NoContent();
+    }
+    catch (Exception ex) when (IsRoleError(ex))
+    {
+        return RoleError(ex);
+    }
+}).RequireAuthorization();
+
+// Giving and taking roles needs users.manage. The role and the person's permissions must be within the requester's.
+app.MapPost("/users/{id:guid}/roles", async (Guid id, AssignRoleRequest request, ClaimsPrincipal user, UserRepository users, RoleRepository roles) =>
+{
+    if (!TryGetSession(user, out var tenantId, out var userId))
+    {
+        return Results.Unauthorized();
+    }
+
+    if (!await users.HasPermissionAsync(tenantId, userId, "users.manage"))
+    {
+        return Results.StatusCode(StatusCodes.Status403Forbidden);
+    }
+
+    try
+    {
+        await roles.AssignAsync(tenantId, userId, id, request.RoleId);
+        return Results.NoContent();
+    }
+    catch (Exception ex) when (IsRoleError(ex))
+    {
+        return RoleError(ex);
+    }
+}).RequireAuthorization();
+
+app.MapDelete("/users/{id:guid}/roles/{roleId:guid}", async (Guid id, Guid roleId, ClaimsPrincipal user, UserRepository users, RoleRepository roles) =>
+{
+    if (!TryGetSession(user, out var tenantId, out var userId))
+    {
+        return Results.Unauthorized();
+    }
+
+    if (!await users.HasPermissionAsync(tenantId, userId, "users.manage"))
+    {
+        return Results.StatusCode(StatusCodes.Status403Forbidden);
+    }
+
+    try
+    {
+        await roles.RemoveAsync(tenantId, userId, id, roleId);
+        return Results.NoContent();
+    }
+    catch (Exception ex) when (IsRoleError(ex))
+    {
+        return RoleError(ex);
+    }
+}).RequireAuthorization();
+
+static bool IsRoleError(Exception ex) =>
+    ex is ArgumentException or UnknownPermissionException or RoleKeyTakenException
+        or RoleExceedsRequesterException or AccountRolesExceedRequesterException
+        or RoleNotFoundException or UserNotFoundException;
+
+static IResult RoleError(Exception ex) => ex switch
+{
+    RoleExceedsRequesterException or AccountRolesExceedRequesterException =>
+        Results.StatusCode(StatusCodes.Status403Forbidden),
+    RoleNotFoundException or UserNotFoundException => Results.NotFound(new { error = ex.Message }),
+    RoleKeyTakenException => Results.Conflict(new { error = ex.Message }),
+    _ => Results.BadRequest(new { error = ex.Message }),
+};
+
 app.Run();
 
 static bool TryGetSession(ClaimsPrincipal user, out Guid tenantId, out Guid userId)
@@ -486,6 +648,12 @@ public sealed record CreateInvitationRequest(string? Email, string? Username, st
 public sealed record AcceptInvitationRequest(string Tenant, string Token, string Password);
 
 public sealed record ResetPasswordRequest(string Tenant, string Token, string Password);
+
+public sealed record CreateRoleRequest(string Key, string Name, string[]? Permissions);
+
+public sealed record UpdateRoleRequest(string Name, string[]? Permissions);
+
+public sealed record AssignRoleRequest(Guid RoleId);
 
 // Makes the entry point visible to integration tests added in later phases.
 public partial class Program { }
