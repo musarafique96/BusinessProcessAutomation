@@ -33,6 +33,7 @@ builder.Services.AddSingleton(new TenantLookup(async () => await dataSource.Open
 builder.Services.AddSingleton(new InvitationRepository(async () => await dataSource.OpenConnectionAsync(), passwords));
 builder.Services.AddSingleton(new PasswordResetRepository(async () => await dataSource.OpenConnectionAsync(), passwords));
 builder.Services.AddSingleton(new RoleRepository(async () => await dataSource.OpenConnectionAsync()));
+builder.Services.AddSingleton(new TenantProvisioningRepository(async () => await dataSource.OpenConnectionAsync(), passwords));
 
 // The Web client ID from the BPA Google project. It is public, so it is configuration, not a secret.
 var googleClientId = builder.Configuration["Google:ClientId"] ?? "";
@@ -124,6 +125,13 @@ builder.Services.AddRateLimiter(options =>
             QueueLimit = 0,
         }));
 });
+
+// The platform admin key comes from the file named by Platform:AdminKeyFile (a Docker secret). When it is
+// missing or empty, company creation is switched off.
+var platformKeyFile = builder.Configuration["Platform:AdminKeyFile"];
+var platformAdminKey = string.IsNullOrWhiteSpace(platformKeyFile) || !File.Exists(platformKeyFile)
+    ? ""
+    : File.ReadAllText(platformKeyFile).Trim();
 
 var app = builder.Build();
 
@@ -582,6 +590,42 @@ app.MapDelete("/users/{id:guid}/roles/{roleId:guid}", async (Guid id, Guid roleI
     }
 }).RequireAuthorization();
 
+// Creates a company with its first admin. Platform operators only: the request must carry the platform admin key.
+app.MapPost("/platform/tenants", async (CreateTenantRequest request, HttpContext http, TenantProvisioningRepository provisioning) =>
+{
+    if (platformAdminKey.Length == 0)
+    {
+        return Results.StatusCode(StatusCodes.Status503ServiceUnavailable);
+    }
+
+    var sent = http.Request.Headers["X-Platform-Key"].ToString();
+    if (!System.Security.Cryptography.CryptographicOperations.FixedTimeEquals(
+            System.Text.Encoding.UTF8.GetBytes(sent),
+            System.Text.Encoding.UTF8.GetBytes(platformAdminKey)))
+    {
+        return Results.Unauthorized();
+    }
+
+    try
+    {
+        var tenantId = await provisioning.ProvisionAsync(
+            request.Slug ?? "",
+            request.Name ?? "",
+            request.AdminEmail ?? "",
+            request.AdminFullName ?? "",
+            request.AdminPassword ?? "");
+        return Results.Created($"/platform/tenants/{tenantId}", new { id = tenantId });
+    }
+    catch (TenantSlugTakenException ex)
+    {
+        return Results.Conflict(new { error = ex.Message });
+    }
+    catch (ArgumentException ex)
+    {
+        return Results.BadRequest(new { error = ex.Message });
+    }
+}).RequireRateLimiting("sign-in");
+
 static bool IsRoleError(Exception ex) =>
     ex is ArgumentException or UnknownPermissionException or RoleKeyTakenException
         or RoleExceedsRequesterException or AccountRolesExceedRequesterException
@@ -654,6 +698,8 @@ public sealed record CreateRoleRequest(string Key, string Name, string[]? Permis
 public sealed record UpdateRoleRequest(string Name, string[]? Permissions);
 
 public sealed record AssignRoleRequest(Guid RoleId);
+
+public sealed record CreateTenantRequest(string? Slug, string? Name, string? AdminEmail, string? AdminFullName, string? AdminPassword);
 
 // Makes the entry point visible to integration tests added in later phases.
 public partial class Program { }
