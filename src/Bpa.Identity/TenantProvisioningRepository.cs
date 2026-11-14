@@ -123,6 +123,8 @@ public sealed class TenantProvisioningRepository(Func<Task<NpgsqlConnection>> op
             await link.ExecuteNonQueryAsync(cancellationToken);
         }
 
+        await AuditLog.WriteAsync(connection, transaction, tenantId, "system", null, "tenant.created", "tenant", tenantId.ToString(),
+            null, new { slug = normalizedSlug, name = companyName }, cancellationToken);
         await transaction.CommitAsync(cancellationToken);
         return tenantId;
     }

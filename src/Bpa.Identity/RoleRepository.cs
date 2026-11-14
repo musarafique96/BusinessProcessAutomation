@@ -128,6 +128,8 @@ public sealed class RoleRepository(Func<Task<NpgsqlConnection>> openConnection)
         }
 
         await InsertPermissionsAsync(connection, transaction, tenantId, roleId, permissions, cancellationToken);
+        await AuditLog.WriteAsync(connection, transaction, tenantId, "user", requesterId, "role.created", "role", roleId.ToString(),
+            null, new { key, name = roleName, permissions }, cancellationToken);
         await transaction.CommitAsync(cancellationToken);
         return roleId;
     }
@@ -174,6 +176,8 @@ public sealed class RoleRepository(Func<Task<NpgsqlConnection>> openConnection)
         }
 
         await InsertPermissionsAsync(connection, transaction, tenantId, roleId, permissions, cancellationToken);
+        await AuditLog.WriteAsync(connection, transaction, tenantId, "user", requesterId, "role.updated", "role", roleId.ToString(),
+            new { permissions = current.Order().ToArray() }, new { name = roleName, permissions = permissions.Order().ToArray() }, cancellationToken);
         await transaction.CommitAsync(cancellationToken);
     }
 
@@ -200,6 +204,8 @@ public sealed class RoleRepository(Func<Task<NpgsqlConnection>> openConnection)
             await delete.ExecuteNonQueryAsync(cancellationToken);
         }
 
+        await AuditLog.WriteAsync(connection, transaction, tenantId, "user", requesterId, "role.deleted", "role", roleId.ToString(),
+            new { permissions = current.Order().ToArray() }, null, cancellationToken);
         await transaction.CommitAsync(cancellationToken);
     }
 
@@ -251,6 +257,8 @@ public sealed class RoleRepository(Func<Task<NpgsqlConnection>> openConnection)
             await assign.ExecuteNonQueryAsync(cancellationToken);
         }
 
+        await AuditLog.WriteAsync(connection, transaction, tenantId, "user", requesterId, "role.assigned", "user", userId.ToString(),
+            null, new { roleId }, cancellationToken);
         await transaction.CommitAsync(cancellationToken);
     }
 
@@ -294,6 +302,8 @@ public sealed class RoleRepository(Func<Task<NpgsqlConnection>> openConnection)
             await remove.ExecuteNonQueryAsync(cancellationToken);
         }
 
+        await AuditLog.WriteAsync(connection, transaction, tenantId, "user", requesterId, "role.removed", "user", userId.ToString(),
+            new { roleId }, null, cancellationToken);
         await transaction.CommitAsync(cancellationToken);
     }
 
